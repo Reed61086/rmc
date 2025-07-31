@@ -359,8 +359,8 @@
             // Calculate credit line (max loan amount minus existing mortgage minus fees)
             const maxLoanAmount = homeValue * locPercentage;
             let creditLine = maxLoanAmount - existingMortgage - fees;
-            // Applying an additional 20% reduction cumulatively
-            creditLine = Math.max(0, creditLine * 0.80); 
+            // Applying the reduction to 60% of its value
+            creditLine = Math.max(0, creditLine * 0.60); 
             
             // Update results UI
             document.getElementById('creditLine').textContent = '$' + numberWithCommas(Math.round(creditLine));
