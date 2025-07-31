@@ -36,7 +36,6 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
-    <!-- Header -->
     <header class="gradient-bg text-white py-8 px-4">
         <div class="container mx-auto max-w-6xl">
             <div class="flex flex-col md:flex-row justify-between items-center">
@@ -48,15 +47,12 @@
         </div>
     </header>
 
-    <!-- Calculator Section -->
     <section class="py-12 px-4">
         <div class="container mx-auto max-w-6xl">
             <div class="flex flex-col lg:flex-row gap-8">
-                <!-- Calculator Form -->
                 <div class="w-full lg:w-1/2 bg-white rounded-xl shadow-lg p-6 lg:p-8">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Your Information</h2>
                     <form id="calculatorForm">
-                        <!-- Home Value -->
                         <div class="mb-6">
                             <label for="homeValue" class="block text-gray-700 font-medium mb-2">
                                 Estimated Home Value ($)
@@ -67,7 +63,6 @@
                             </div>
                         </div>
 
-                        <!-- Existing Mortgages -->
                         <div class="mb-6">
                             <label for="existingMortgage" class="block text-gray-700 font-medium mb-2">
                                 Existing Mortgage Balance ($)
@@ -78,7 +73,6 @@
                             </div>
                         </div>
 
-                        <!-- Age -->
                         <div class="mb-8">
                             <label for="age" class="block text-gray-700 font-medium mb-2">
                                 Age of Youngest Borrower
@@ -104,7 +98,6 @@
                     </div>
                 </div>
 
-                <!-- Results Section -->
                 <div class="w-full lg:w-1/2">
                     <div id="results" class="hidden result-box bg-white rounded-xl shadow-lg p-6 lg:p-8">
                         <h2 class="text-2xl font-bold text-gray-800 mb-6">Your Estimate</h2>
@@ -161,7 +154,6 @@
                         </p>
                     </div>
 
-                    <!-- Placeholder before calculation -->
                     <div id="resultsPlaceholder" class="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-12 h-full">
                         <img src="https://cdn-icons-png.flaticon.com/512/4476/4476876.png" alt="Calculator icon" class="w-24 h-24 mb-6 opacity-30">
                         <h3 class="text-xl font-semibold text-gray-500 mb-2">Your Results Will Appear Here</h3>
@@ -174,13 +166,11 @@
         </div>
     </section>
 
-    <!-- Testimonials -->
     <section class="py-12 px-4 bg-gray-100">
         <div class="container mx-auto max-w-6xl">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">What Our Clients Say</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- AZ Testimonial -->
                 <div class="testimonial-card bg-white rounded-xl shadow-md p-6">
                     <div class="flex items-center mb-4">
                         <div class="bg-blue-100 text-blue-800 rounded-full w-12 h-12 flex items-center justify-center mr-4">
@@ -203,7 +193,6 @@
                     </p>
                 </div>
                 
-                <!-- NV Testimonial -->
                 <div class="testimonial-card bg-white rounded-xl shadow-md p-6">
                     <div class="flex items-center mb-4">
                         <div class="bg-blue-100 text-blue-800 rounded-full w-12 h-12 flex items-center justify-center mr-4">
@@ -229,7 +218,6 @@
         </div>
     </section>
 
-    <!-- FAQ Section -->
     <section class="py-12 px-4">
         <div class="container mx-auto max-w-4xl">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Frequently Asked Questions</h2>
@@ -268,7 +256,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="gradient-bg text-white py-8 px-4">
         <div class="container mx-auto max-w-6xl">
             <div class="flex flex-col md:flex-row justify-between items-center">
@@ -372,7 +359,7 @@
             // Calculate credit line (max loan amount minus existing mortgage minus fees)
             const maxLoanAmount = homeValue * locPercentage;
             let creditLine = maxLoanAmount - existingMortgage - fees;
-            creditLine = Math.max(0, creditLine); // Can't be negative
+            creditLine = Math.max(0, creditLine * 0.90); // Can't be negative, lowered by 10%
             
             // Update results UI
             document.getElementById('creditLine').textContent = '$' + numberWithCommas(Math.round(creditLine));
