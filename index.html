@@ -1,415 +1,432 @@
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reverse Mortgage Calculator | Reverse & Relax</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #5b86e5 0%, #36d1dc 100%);
-        }
-        .result-box {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        .result-box:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-        }
-        .testimonial-card {
-            transition: all 0.3s ease;
-        }
-        .testimonial-card:hover {
-            transform: translateY(-5px);
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Reverse Mortgage Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+:root {
+  --bg: #0f172a;
+  --card: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #60a5fa;
+  --danger: #f87171;
+  --success: #34d399;
+  --border: #1f2937;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(1200px 800px at 10% 10%, #0b1220 0%, #090f1a 40%, #05080f 100%), var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.45;
+}
+.container { max-width: 980px; margin: 40px auto; padding: 0 16px 40px; }
+header { margin-bottom: 24px; }
+h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0.2px; }
+.subtitle { margin: 0; color: var(--muted); }
+
+.inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+/* Senior-friendly Age controls */
+.age-inputs {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+@media (max-width: 780px) { .age-inputs { grid-template-columns: 1fr; } }
+.age-controls {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  gap: 10px;
+  align-items: center;
+}
+.age-btn {
+  height: 44px; width: 48px; font-size: 24px; line-height: 1;
+  color: var(--text); background: #0b1220; border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+}
+.age-btn:active { transform: translateY(1px); }
+.control.tight { padding: 6px 10px; }
+.control.tight input[type="range"] { width: 100%; }
+/* Snap slider larger thumb for accessibility */
+input[type="range"] { height: 32px; }
+input[type="range"]::-webkit-slider-thumb { width: 28px; height: 28px; }
+input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; }
+
+@media (max-width: 780px) { .inputs { grid-template-columns: 1fr; } }
+.field {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.field label { display: block; font-weight: 600; margin-bottom: 8px; }
+.control {
+  display: flex; align-items: center; gap: 10px;
+  background: #0b1220; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+}
+.control input[type="number"] {
+  width: 100%; background: transparent; border: none; outline: none; color: var(--text); font-size: 16px; -moz-appearance: textfield;
+}
+.control input[type="number"]::-webkit-outer-spin-button,
+.control input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.control input[type="range"] { width: 100%; accent-color: var(--accent); }
+.prefix, .suffix { color: var(--muted); font-variant-numeric: tabular-nums; }
+.hint { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
+
+.summary { margin-top: 26px; }
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 14px 16px; border-top: 1px solid var(--border); }
+.row:first-child { border-top: none; }
+.row.total { background: linear-gradient(180deg, rgba(96,165,250,0.15), rgba(96,165,250,0.05)); }
+.label { color: var(--muted); }
+.value { font-variant-numeric: tabular-nums; font-weight: 600; }
+.value.strong { color: #e0e7ff; font-size: 18px; }
+.value.negative { color: var(--danger); }
+.note { color: var(--muted); font-size: 12px; margin: 12px 4px 0; }
+
+.cta { margin-top: 16px; display: flex; justify-content: center; }
+.btn-schedule {
+  display: inline-block; background: #16a34a; color: white; padding: 14px 18px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1); font-weight: 700; text-decoration: none; font-size: 16px;
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.3);
+}
+.btn-schedule:hover { background: #22c55e; }
+.btn-schedule:active { transform: translateY(1px); }
+
+/* Compliance footer */
+footer.compliance { margin-top: 32px; border-top: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); }
+footer.compliance .footer-content { max-width: 1100px; margin: 0 auto; padding: 20px 16px 36px; display: grid; grid-template-columns: 360px 1fr; gap: 24px; }
+@media (max-width: 900px) { footer.compliance .footer-content { grid-template-columns: 1fr; } }
+footer.compliance h2 { margin: 0 0 6px; font-size: 20px; }
+footer.compliance h3 { margin: 6px 0 8px; font-size: 16px; color: #cbd5e1; }
+footer.compliance p { margin: 6px 0; color: var(--muted); font-size: 12px; }
+footer.compliance a.link { color: var(--accent); text-decoration: none; }
+footer.compliance a.link:hover { text-decoration: underline; }
+
+.eho-logos { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
+.eho-logos svg { height: 44px; width: auto; display: block; flex: 0 0 auto; }
+.eho-logos svg.eho { height: 56px; }
+
+.branding, .licensing { background: #0b1220; border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+
+/* badges for warnings */
+.badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: #0b1220; color: var(--muted); margin-left: 8px; }
+.badge.warn { border-color: #7c2d12; background: rgba(248, 113, 113, 0.08); color: #fca5a5; }
+  </style>
 </head>
-<body class="bg-gray-50 font-sans">
-    <header class="gradient-bg text-white py-8 px-4">
-        <div class="container mx-auto max-w-6xl">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-6 md:mb-0">
-                    <h1 class="text-3xl md:text-4xl font-bold">Reverse Mortgage Calculator</h1>
-                    <p class="mt-2 text-lg">Find out how much you could qualify for today</p>
-                </div>
-            </div>
-        </div>
+<body>
+  <main class="container">
+    <header>
+      <h1>Reverse Mortgage Calculator</h1>
     </header>
 
-    <section class="py-12 px-4">
-        <div class="container mx-auto max-w-6xl">
-            <div class="flex flex-col lg:flex-row gap-8">
-                <div class="w-full lg:w-1/2 bg-white rounded-xl shadow-lg p-6 lg:p-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Your Information</h2>
-                    <form id="calculatorForm">
-                        <div class="mb-6">
-                            <label for="homeValue" class="block text-gray-700 font-medium mb-2">
-                                Estimated Home Value ($)
-                            </label>
-                            <input type="number" id="homeValue" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="500,000" required>
-                            <div class="mt-2">
-                                <input type="range" id="homeValueRange" min="100000" max="3000000" step="10000" value="500000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                        </div>
+    <section class="inputs">
+      <div class="field">
+        <label for="age">Age</label>
 
-                        <div class="mb-6">
-                            <label for="existingMortgage" class="block text-gray-700 font-medium mb-2">
-                                Existing Mortgage Balance ($)
-                            </label>
-                            <input type="number" id="existingMortgage" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="100,000">
-                            <div class="mt-2">
-                                <input type="range" id="existingMortgageRange" min="0" max="2000000" step="10000" value="100000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                        </div>
+        <!-- Large, senior-friendly dial (wheel) + plus/minus + snapping slider + text input -->
+        <div class="age-inputs">
+          <!-- Wheel removed per request -->
 
-                        <div class="mb-8">
-                            <label for="age" class="block text-gray-700 font-medium mb-2">
-                                Age of Youngest Borrower
-                            </label>
-                            <input type="number" id="age" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="62" min="62" max="100" required>
-                            <div class="mt-2">
-                                <input type="range" id="ageRange" min="62" max="100" step="1" value="62" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full gradient-bg text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition duration-300 shadow-lg">
-                            Calculate My Options
-                        </button>
-                    </form>
-
-                    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h3 class="font-bold text-blue-800 mb-2 flex items-center">
-                            <i class="fas fa-lock mr-2"></i> Your Information is Secure
-                        </h3>
-                        <p class="text-sm text-blue-700">
-                            We respect your privacy. Your information will never be shared with third parties.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="w-full lg:w-1/2">
-                    <div id="results" class="hidden result-box bg-white rounded-xl shadow-lg p-6 lg:p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Your Estimate</h2>
-                        
-                        <div class="mb-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-semibold text-gray-700">Credit Line Available</h3>
-                                <span id="creditLine" class="text-2xl font-bold text-blue-600">$0</span>
-                            </div>
-                            <div class="bg-gray-100 rounded-lg p-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p class="text-sm text-gray-500">Home Value</p>
-                                        <p id="dispHomeValue" class="font-semibold">$0</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Existing Mortgage</p>
-                                        <p id="dispMortgage" class="font-semibold">$0</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Youngest Borrower</p>
-                                        <p id="dispAge" class="font-semibold">62</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Estimated Fees</p>
-                                        <p id="dispFees" class="font-semibold">$0</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3 class="font-semibold text-gray-700 mb-3">How does this work?</h3>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                                <span>No monthly mortgage payments required*</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                                <span>Loan repaid when home is sold or no longer primary residence</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                                <span>Eligible for homeowners 62+ years old</span>
-                            </li>
-                        </ul>
-
-                        <a id="scheduleBtn" href="https://calendly.com/reverseandrelax/30min" target="_blank" class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-center transition duration-300 mb-4">
-                            Schedule Free Consultation
-                        </a>
-                        
-                        <p class="text-xs text-gray-500 text-center">
-                            *You must meet all loan obligations such as paying property taxes and insurance.
-                        </p>
-                    </div>
-
-                    <div id="resultsPlaceholder" class="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-12 h-full">
-                        <img src="https://cdn-icons-png.flaticon.com/512/4476/4476876.png" alt="Calculator icon" class="w-24 h-24 mb-6 opacity-30">
-                        <h3 class="text-xl font-semibold text-gray-500 mb-2">Your Results Will Appear Here</h3>
-                        <p class="text-gray-400 text-center">
-                            Enter your information on the left and click "Calculate My Options" to see how much you may qualify for.
-                        </p>
-                    </div>
-                </div>
+          <div class="age-controls">
+            <button type="button" id="ageDecrement" class="age-btn" aria-label="Decrease age">−</button>
+            <div class="control with-suffix tight">
+              <input type="range" id="ageRange" min="50" max="100" step="1" value="62" />
+              <span class="suffix">slider</span>
             </div>
+            <button type="button" id="ageIncrement" class="age-btn" aria-label="Increase age">+</button>
+          </div>
+
+          <div class="control with-suffix">
+            <input type="number" id="age" min="50" max="100" step="1" value="62" inputmode="numeric" />
+            <span class="suffix">years</span>
+          </div>
         </div>
+
+        <small class="hint">Eligibility requires age ≥ 62. Use the improved slider with snap, +/− buttons, or type directly.</small>
+      </div>
+
+      <div class="field">
+        <label for="homeValue">Home Value</label>
+        <div class="control with-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="homeValue" min="0" step="1000" value="600000" />
+        </div>
+        <small class="hint">Market value of the home.</small>
+      </div>
+
+      <div class="field">
+        <label for="existingMortgages">Existing Mortgages</label>
+        <div class="control with-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="existingMortgages" min="0" step="1000" value="0" />
+        </div>
+        <small class="hint">Total balance of mortgages/loans to be paid off at closing.</small>
+      </div>
     </section>
 
-    <section class="py-12 px-4 bg-gray-100">
-        <div class="container mx-auto max-w-6xl">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">What Our Clients Say</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="testimonial-card bg-white rounded-xl shadow-md p-6">
-                    <div class="flex items-center mb-4">
-                        <div class="bg-blue-100 text-blue-800 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                            <i class="fas fa-user text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold">Mary K.</h4>
-                            <p class="text-gray-600 text-sm">Phoenix, AZ</p>
-                        </div>
-                    </div>
-                    <div class="flex mb-2">
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                    </div>
-                    <p class="text-gray-700">
-                        "Reed made the reverse mortgage process so simple. I was nervous at first, but he explained everything clearly and helped make my retirement more comfortable. I can now enjoy my golden years without worrying about mortgage payments."
-                    </p>
-                </div>
-                
-                <div class="testimonial-card bg-white rounded-xl shadow-md p-6">
-                    <div class="flex items-center mb-4">
-                        <div class="bg-blue-100 text-blue-800 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                            <i class="fas fa-user text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold">Robert & Linda T.</h4>
-                            <p class="text-gray-600 text-sm">Henderson, NV</p>
-                        </div>
-                    </div>
-                    <div class="flex mb-2">
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                        <i class="fas fa-star text-yellow-400"></i>
-                    </div>
-                    <p class="text-gray-700">
-                        "We were skeptical about reverse mortgages until we talked to Reed. His knowledge and patience put our minds at ease. The line of credit we qualified for has given us financial flexibility we didn't have before. Highly recommend!"
-                    </p>
-                </div>
-            </div>
+    <section class="summary">
+      <div class="card">
+        <div class="row" style="display:none">
+          <div class="label">HECM Lending Limit</div>
+          <div class="value" id="lendingLimitDisplay">$1,149,825</div>
         </div>
+        <div class="row" style="display:none">
+          <div class="label">Eligible Home Value Cap</div>
+          <div class="value" id="eligibleValueDisplay">$0</div>
+        </div>
+        <div class="row" style="display:none">
+          <div class="label">Principal Limit Factor (PLF)</div>
+          <div class="value" id="plfDisplay">0.00</div>
+        </div>
+        <div class="row" style="display:none">
+          <div class="label">Gross Principal Limit</div>
+          <div class="value" id="grossLimitDisplay">$0</div>
+        </div>
+        <div class="row">
+          <div class="label">Less Existing Mortgages</div>
+          <div class="value negative" id="existingMortgagesDisplay">-$0</div>
+        </div>
+        <div class="row">
+          <div class="label">Less UFMIP (2.0%)</div>
+          <div class="value negative" id="ufmipDisplay">-$0</div>
+        </div>
+        <div class="row">
+          <div class="label">Less Closing Costs (3.0%)</div>
+          <div class="value negative" id="closingCostsDisplay">-$0</div>
+        </div>
+        <div class="row total">
+          <div class="label">Estimated Net Available Proceeds</div>
+          <div class="value strong" id="netProceedsDisplay">$0</div>
+        </div>
+      </div>
+
+      <div class="cta">
+        <a class="btn-schedule" href="https://calendly.com/reverseandrelax/30min" target="_blank" rel="noopener noreferrer">
+          Schedule a Call with Reed Olson, our Reverse Mortgage Specialist
+        </a>
+      </div>
+
+      <p class="note">
+        This is an educational estimate. Actual proceeds depend on program type, interest rates, closing costs,
+        mandatory obligations (e.g., taxes, insurance), property type, state regulations, and lender underwriting.
+        This tool deducts UFMIP at 2.0% and closing costs at 3.0% of the eligible home value cap for illustration.
+      </p>
     </section>
+  </main>
 
-    <section class="py-12 px-4">
-        <div class="container mx-auto max-w-4xl">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Frequently Asked Questions</h2>
-            
-            <div class="space-y-4">
-                <div class="border border-gray-200 rounded-lg overflow-hidden">
-                    <button class="faq-toggle w-full flex justify-between items-center p-4 text-left bg-gray-50 hover:bg-gray-100">
-                        <h3 class="font-semibold">What is a reverse mortgage?</h3>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <div class="faq-answer p-4 border-t border-gray-200 hidden">
-                        <p>A reverse mortgage is a loan for homeowners age 62 and older that allows you to convert part of the equity in your home into cash without having to sell your home or pay additional monthly bills. Unlike a traditional mortgage, with a reverse mortgage you don't make monthly payments to the lender. Instead, the lender pays you, and the loan (plus interest and fees) is repaid when you sell the home, move out permanently, or pass away.</p>
-                    </div>
-                </div>
-                
-                <div class="border border-gray-200 rounded-lg overflow-hidden">
-                    <button class="faq-toggle w-full flex justify-between items-center p-4 text-left bg-gray-50 hover:bg-gray-100">
-                        <h3 class="font-semibold">Are reverse mortgages safe?</h3>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <div class="faq-answer p-4 border-t border-gray-200 hidden">
-                        <p>Yes, reverse mortgages are federally insured by the Federal Housing Administration (FHA). They come with consumer protections such as required counseling from a HUD-approved agency to ensure you understand the loan terms. Your home remains in your name and you retain ownership. You can never owe more than the value of your home when the loan becomes due.</p>
-                    </div>
-                </div>
-                
-                <div class="border border-gray-200 rounded-lg overflow-hidden">
-                    <button class="faq-toggle w-full flex justify-between items-center p-4 text-left bg-gray-50 hover:bg-gray-100">
-                        <h3 class="font-semibold">How do I qualify for a reverse mortgage?</h3>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <div class="faq-answer p-4 border-t border-gray-200 hidden">
-                        <p>To qualify for a reverse mortgage, you must be at least 62 years old, own your home outright or have considerable equity, live in the home as your primary residence, and be able to continue paying property taxes, homeowners insurance, and home maintenance costs. Your home must also be a single-family home, 2-4 unit property (with one unit occupied by the borrower), or a HUD-approved condominium or manufactured home.</p>
-                    </div>
-                </div>
-            </div>
+  <footer class="compliance">
+    <div class="footer-content">
+      <div class="branding">
+        <h2>Reverse & Relax</h2>
+        <p><strong>Reed Olson</strong><br/>Trusted Mortgage Advisor and Reverse Mortgage Specialist</p>
+        <p>
+          Phone: <a href="tel:17024069868">702-406-9868</a> |
+          <a href="mailto:rolson@c2financial.com">rolson@c2financial.com</a>
+        </p>
+        <p>Branch Address: 2320 Paseo Del Prado B204 Las Vegas, NV 89102</p>
+        <p>C2 NMLS #135622 | C2 AZ #919209 | C2 NV #3260</p>
+        <p>NMLS #1668285 | AZ #1043701 | NV #62361</p>
+        <p><a class="link" href="https://www.nmlsconsumeraccess.org/" target="_blank" rel="noopener noreferrer">NMLS Consumer Access</a></p>
+        <div class="eho-logos">
+          <!-- Equal Housing Lender (monochrome, unsquashed proportions) -->
+          <svg class="ehl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" role="img" aria-label="Equal Housing Lender">
+            <rect width="768" height="768" fill="#000"/>
+            <!-- house -->
+            <path d="M384 128 L704 320 V640 H64 V320 Z" fill="#fff"/>
+            <!-- equal bars centered -->
+            <rect x="256" y="352" width="256" height="48" fill="#000"/>
+            <rect x="256" y="448" width="256" height="48" fill="#000"/>
+          </svg>
+
+          <!-- Equal Housing Opportunity with stacked text below, matching reference aspect -->
+          <svg class="eho" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 821" role="img" aria-label="Equal Housing Opportunity">
+            <rect width="768" height="821" fill="#fff"/>
+            <!-- icon block (top ~620px) -->
+            <path d="M384 80 L736 296 H32 Z" fill="#000"/>
+            <rect x="96" y="296" width="576" height="280" fill="#000"/>
+            <rect x="192" y="360" width="384" height="44" fill="#fff"/>
+            <rect x="192" y="444" width="384" height="44" fill="#fff"/>
+            <!-- text block bottom -->
+            <g font-family="Arial, Helvetica, sans-serif" fill="#000" text-anchor="middle">
+              <text x="384" y="748" font-size="96" letter-spacing="2">EQUAL HOUSING</text>
+              <text x="384" y="820" font-size="96" letter-spacing="2">OPPORTUNITY</text>
+            </g>
+          </svg>
         </div>
-    </section>
+      </div>
 
-    <footer class="gradient-bg text-white py-8 px-4">
-        <div class="container mx-auto max-w-6xl">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-6 md:mb-0">
-                    <h2 class="text-2xl font-bold mb-2">Reverse & Relax</h2>
-                    <p class="text-sm text-blue-100 mb-2 font-semibold">Reed Olson</p>
-                    <p class="text-sm text-blue-100 mb-2">Trusted Mortgage Advisor and Reverse Mortgage Specialist</p>
-                    <p class="text-sm text-blue-100 mb-2">Phone: 702-406-9868 | rolson@c2financial.com</p>
-                    <p class="text-sm text-blue-100 mb-2">Branch Address: 2320 Paseo Del Prado B204 Las Vegas, NV 89102</p>
-                    <p class="text-xs text-blue-100 mb-2">C2 NMLS #135622 | C2 AZ #919209 | C2 NV #3260</p>
-                    <p class="text-xs text-blue-100 mb-2">NMLS #1668285 | AZ #1043701 | NV #62361</p>
-                </div>
-                <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8">
-                    <div class="flex space-x-4">
-                        <a href="https://calendly.com/reverseandrelax/30min" target="_blank" class="bg-white text-blue-600 hover:bg-gray-100 font-bold py-2 px-6 rounded-full transition duration-300">
-                            Schedule Call
-                        </a>
-                    </div>
-                    <a href="https://nmlsconsumeraccess.org/" target="_blank" class="text-sm text-blue-100 hover:underline">NMLS Consumer Access</a>
-                    <div class="flex items-center space-x-4">
-                        <img src="https://www.hud.gov/sites/dfiles/OCHCO/images/EHO_English_White.png" alt="Equal Housing Opportunity" class="h-10">
-                        <img src="https://www.hud.gov/sites/dfiles/OCHCO/images/EHL_English_White.png" alt="Equal Housing Lender" class="h-10">
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-center mb-4">
-                <div class="flex items-center bg-blue-800 bg-opacity-30 rounded-lg p-4">
-                    <div class="mr-4">
-                        <i class="fas fa-check-circle text-xl text-green-300"></i>
-                    </div>
-                    <div>
-                        <p class="font-semibold">C2 Financial licensed in</p>
-                        <p class="text-lg">AZ, CA, CO, FL, ID, MT, NV, OR, UT, WA, WY</p>
-                    </div>
-                </div>
-            </div>
+      <div class="licensing">
+        <h3>Licensing & Disclosures</h3>
+        <p>C2 Financial licensed in AZ, CA, CO, FL, ID, MT, NV, OR, UT, WA, WY</p>
+        <p>This calculator provides estimates only. All figures are estimates and no guarantee is expressed or implied. All products are subject to credit and property approval. Program terms subject to change without notice. This is not a commitment to lend. Equal Housing Lender.</p>
+        <p>C2 NMLS #135622 - C2 Financial is rapidly growing with active licenses in over 34 states as of March 2024. Number of licensed states and lenders within the C2 Lender Network may vary. www.C2Financial.com</p>
+        <p>C2 Financial Corporation is licensed by the California Bureau of Real Estate, Broker # 01821025; Alabama SBD #23303; Arizona DFI #919209; Arkansas ASD #129945; Colorado DRE; Florida OFR #MBR3519; Hawaii DFI #HI-135622; Idaho DOF #MBL-9475; Illinois DFPR #MB.67618115; Kansas OSBC #135622; Kentucky DFI #MC809104; Louisiana OFI #135622; Michigan DIFS #FL0023565 / SR0023566; Minnesota DOC #MN-MO-135622; Mississippi DBCF #135622; Montana DBFI #135622; Nebraska DBF #135622; Nevada MLD #3260; New Mexico FID #135622; Ohio DFI #RM.804919.000; Oklahoma DOCC #MB014489; Oregon DOF #ML-4917; South Carolina DCA #135622; South Dakota DOB #135622.ML; Tennessee DFI #135622; Texas SML #135622; Washington DFI #MB135622; Wyoming DOB #4612; NMLS # 135622. Loan approval is not guaranteed and is subject to lender review of information. All loan approvals are conditional and all conditions must be met by borrower. Loan is only approved when lender has issued approval in writing and is subject to the Lender conditions. Specified rates may not be available for all borrowers. Rate subject to change with market conditions. C2 Financial Corporation is an Equal Opportunity Mortgage Broker/Lender. As a broker, C2 Financial Corporation is NOT individually approved by the FHA or HUD, but C2 Financial Corporation is allowed to originate FHA loans based on their relationships with FHA approved lenders.</p>
+        <p><strong>Consumers in Texas:</strong> Consumers wishing to file a complaint against a company or a residential mortgage loan originator should complete and send a complaint form to the Texas Department of Savings and Mortgage Lending, 2601 North Lamar, Suite 201, Austin, Texas 78705. Complaint forms and instructions may be obtained from the department's website at www.sml.texas.gov. A toll-free consumer hotline is available at (877) 276-5550. The department maintains a recovery fund to make payments of certain actual out of pocket damages sustained by borrowers caused by acts of licensed residential mortgage loan originators. A written application for reimbursement from the recovery fund must be filed with and investigated by the department prior to the payment of a claim. For more information about the recovery fund, please consult the department's website at www.sml.texas.gov</p>
+      </div>
+    </div>
+  </footer>
 
-            <div class="border-t border-blue-400 mt-4 pt-8 text-center">
-                <p class="text-sm text-blue-100 text-center">
-                    This calculator provides estimates only. All figures are estimates and no guarantee is expressed or implied. All products are subject to credit and property approval. Program terms subject to change without notice. This is not a commitment to lend. Equal Housing Lender.
-                </p>
-                <p class="text-xs text-blue-100 mt-4">C2 NMLS #135622 - C2 Financial is rapidly growing with active licenses in over 34 states as of March 2024. Number of licensed states and lenders within the C2 Lender Network may vary. www.C2Financial.com</p>
-                <p class="text-xs text-blue-100 mt-2">C2 Financial Corporation is licensed by the California Bureau of Real Estate, Broker # 01821025; Alabama SBD #23303; Arizona DFI #919209; Arkansas ASD #129945; Colorado DRE; Florida OFR #MBR3519; Hawaii DFI #HI-135622; Idaho DOF #MBL-9475; Illinois DFPR #MB.67618115; Kansas OSBC #135622; Kentucky DFI #MC809104; Louisiana OFI #135622; Michigan DIFS #FL0023565 / SR0023566; Minnesota DOC #MN-MO-135622; Mississippi DBCF #135622; Montana DBFI #135622; Nebraska DBF #135622; Nevada MLD #3260; New Mexico FID #135622; Ohio DFI #RM.804919.000; Oklahoma DOCC #MB014489; Oregon DOF #ML-4917; South Carolina DCA #135622; South Dakota DOB #135622.ML; Tennessee DFI #135622; Texas SML #135622; Washington DFI #MB135622; Wyoming DOB #4612; NMLS # 135622. Loan approval is not guaranteed and is subject to lender review of information. All loan approvals are conditional and all conditions must be met by borrower. Loan is only approved when lender has issued approval in writing and is subject to the Lender conditions. Specified rates may not be available for all borrowers. Rate subject to change with market conditions. C2 Financial Corporation is an Equal Opportunity Mortgage Broker/Lender. As a broker, C2 Financial Corporation is NOT individually approved by the FHA or HUD, but C2 Financial Corporation is allowed to originate FHA loans based on their relationships with FHA approved lenders.</p>
-                <p class="text-xs text-blue-100 mt-4">Consumers in Texas: Consumers wishing to file a complaint against a company or a residential mortgage loan originator should complete and send a complaint form to the Texas Department of Savings and Mortgage Lending, 2601 North Lamar, Suite 201, Austin, Texas 78705. Complaint forms and instructions may be obtained from the department's website at www.sml.texas.gov. A toll-free consumer hotline is available at (877) 276-5550. The department maintains a recovery fund to make payments of certain actual out of pocket damages sustained by borrowers caused by acts of licensed residential mortgage loan originators. A written application for reimbursement from the recovery fund must be filed with and investigated by the department prior to the payment of a claim. For more information about the recovery fund, please consult the department's website at www.sml.texas.gov</p>
-            </div>
-        </div>
-    </footer>
+  <script>
+(function () {
+  "use strict";
+  const LENDING_LIMIT = 1149825;
+  const UFMIP_RATE = 0.02;
+  const CLOSING_COST_RATE = 0.03;
+  const PLF_POINTS = [
+    { age: 62, plf: 0.29 },
+    { age: 65, plf: 0.32 },
+    { age: 70, plf: 0.37 },
+    { age: 75, plf: 0.42 },
+    { age: 80, plf: 0.48 },
+    { age: 85, plf: 0.53 },
+    { age: 90, plf: 0.58 },
+    { age: 95, plf: 0.61 }
+  ];
 
-    <script>
-        // Sync range sliders with input fields
-        document.getElementById('homeValueRange').addEventListener('input', function() {
-            document.getElementById('homeValue').value = this.value;
-        });
-        document.getElementById('homeValue').addEventListener('input', function() {
-            document.getElementById('homeValueRange').value = this.value;
-        });
+  const ageRangeEl = document.getElementById("ageRange");
+  const ageEl = document.getElementById("age");
+  const ageDecrement = document.getElementById("ageDecrement");
+  const ageIncrement = document.getElementById("ageIncrement");
+  const homeValueEl = document.getElementById("homeValue");
+  const existingMortgagesEl = document.getElementById("existingMortgages");
 
-        document.getElementById('existingMortgageRange').addEventListener('input', function() {
-            document.getElementById('existingMortgage').value = this.value;
-        });
-        document.getElementById('existingMortgage').addEventListener('input', function() {
-            document.getElementById('existingMortgageRange').value = this.value;
-        });
+  const lendingLimitDisplay = document.getElementById("lendingLimitDisplay");
+  const eligibleValueDisplay = document.getElementById("eligibleValueDisplay");
+  const plfDisplay = document.getElementById("plfDisplay");
+  const grossLimitDisplay = document.getElementById("grossLimitDisplay");
+  const existingMortgagesDisplay = document.getElementById("existingMortgagesDisplay");
+  const ufmipDisplay = document.getElementById("ufmipDisplay");
+  const closingCostsDisplay = document.getElementById("closingCostsDisplay");
+  const netProceedsDisplay = document.getElementById("netProceedsDisplay");
 
-        document.getElementById('ageRange').addEventListener('input', function() {
-            document.getElementById('age').value = this.value;
-        });
-        document.getElementById('age').addEventListener('input', function() {
-            document.getElementById('ageRange').value = this.value;
-        });
+  const currencyFmt = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  const numberFmt2 = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        // Calculate reverse mortgage
-        document.getElementById('calculatorForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get input values
-            const homeValue = parseFloat(document.getElementById('homeValue').value) || 0;
-            const existingMortgage = parseFloat(document.getElementById('existingMortgage').value) || 0;
-            const age = parseInt(document.getElementById('age').value) || 62;
-            
-            // Calculate fees (10,000 + 2% of home value)
-            const mip = homeValue * 0.02;
-            const fees = 10000 + mip;
-            
-            // Determine LOC percentage based on age and home value
-            let locPercentage;
-            const underLimit = homeValue < 1210000;
-            
-            if (age >= 92) {
-                locPercentage = underLimit ? 0.64 : 0.57;
-            } else if (age >= 82) {
-                locPercentage = underLimit ? 0.50 : 0.55;
-            } else if (age >= 72) {
-                locPercentage = underLimit ? 0.40 : 0.44;
-            } else if (age >= 62) {
-                locPercentage = underLimit ? 0.34 : 0.38;
-            } else {
-                locPercentage = 0;
-            }
-            
-            // Calculate credit line (max loan amount minus existing mortgage minus fees)
-            const maxLoanAmount = homeValue * locPercentage;
-            let creditLine = maxLoanAmount - existingMortgage - fees;
-            creditLine = Math.max(0, creditLine * 0.65); // Can't be negative, lowered by 10%
-            
-            // Update results UI
-            document.getElementById('creditLine').textContent = '$' + numberWithCommas(Math.round(creditLine));
-            document.getElementById('dispHomeValue').textContent = '$' + numberWithCommas(Math.round(homeValue));
-            document.getElementById('dispMortgage').textContent = '$' + numberWithCommas(Math.round(existingMortgage));
-            document.getElementById('dispAge').textContent = age;
-            document.getElementById('dispFees').textContent = '$' + numberWithCommas(Math.round(fees));
-            
-            // Show results
-            document.getElementById('resultsPlaceholder').classList.add('hidden');
-            document.getElementById('results').classList.remove('hidden');
-            
-            // Add UTM parameters to schedule button
-            const scheduleBtn = document.getElementById('scheduleBtn');
-            const utmParams = new URLSearchParams({
-                utm_source: 'calculator',
-                utm_medium: 'web',
-                utm_campaign: 'reverse_mortgage',
-                estimated_value: homeValue,
-                existing_mortgage: existingMortgage,
-                age: age
-            });
-            scheduleBtn.href = `https://calendly.com/reverseandrelax/30min?${utmParams.toString()}`;
-            
-            // Scroll to results
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-        });
+  lendingLimitDisplay.textContent = currencyFmt.format(LENDING_LIMIT);
 
-        // FAQ toggle functionality
-        document.querySelectorAll('.faq-toggle').forEach(button => {
-            button.addEventListener('click', () => {
-                const answer = button.nextElementSibling;
-                const icon = button.querySelector('i');
-                
-                if (answer.classList.contains('hidden')) {
-                    answer.classList.remove('hidden');
-                    icon.classList.remove('fa-plus');
-                    icon.classList.add('fa-minus');
-                } else {
-                    answer.classList.add('hidden');
-                    icon.classList.remove('fa-minus');
-                    icon.classList.add('fa-plus');
-                }
-            });
-        });
+  function clamp(n, min, max) { return Math.min(Math.max(n, min), max); }
 
-        // Helper function to format numbers with commas
-        function numberWithCommas(x) {
-            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-    </script>
+  function plfForAge(age) {
+    if (age <= PLF_POINTS[0].age) return PLF_POINTS[0].plf;
+    if (age >= PLF_POINTS[PLF_POINTS.length - 1].age) return PLF_POINTS[PLF_POINTS.length - 1].plf;
+    for (let i = 0; i < PLF_POINTS.length - 1; i++) {
+      const a = PLF_POINTS[i], b = PLF_POINTS[i + 1];
+      if (age >= a.age && age <= b.age) {
+        const t = (age - a.age) / (b.age - a.age);
+        return a.plf + t * (b.plf - a.plf);
+      }
+    }
+    return PLF_POINTS[PLF_POINTS.length - 1].plf;
+  }
+
+  function recalc() {
+    const age = clamp(parseInt(ageEl.value || "0", 10), parseInt(ageEl.min, 10), parseInt(ageEl.max, 10));
+    if (String(age) !== ageEl.value) ageEl.value = String(age);
+    if (String(age) !== ageRangeEl.value) ageRangeEl.value = String(age);
+
+    const homeValue = Math.max(0, parseFloat(homeValueEl.value || "0"));
+    const existingMortgages = Math.max(0, parseFloat(existingMortgagesEl.value || "0"));
+
+    const eligibleHomeValue = Math.min(homeValue, LENDING_LIMIT);
+    const eligible = age >= 62;
+
+    const plf = eligible ? plfForAge(age) : 0;
+    const grossPrincipalLimit = eligible ? eligibleHomeValue * plf : 0;
+
+    const ufmip = eligible ? eligibleHomeValue * UFMIP_RATE : 0;
+    const closingCosts = eligible ? eligibleHomeValue * CLOSING_COST_RATE : 0;
+
+    const netProceeds = Math.max(0, grossPrincipalLimit - existingMortgages - ufmip - closingCosts);
+
+    eligibleValueDisplay.textContent = currencyFmt.format(eligibleHomeValue);
+    plfDisplay.textContent = numberFmt2.format(plf);
+    grossLimitDisplay.textContent = currencyFmt.format(grossPrincipalLimit);
+    existingMortgagesDisplay.textContent = "-" + currencyFmt.format(existingMortgages).replace("-", "");
+    ufmipDisplay.textContent = "-" + currencyFmt.format(ufmip).replace("-", "");
+    closingCostsDisplay.textContent = "-" + currencyFmt.format(closingCosts).replace("-", "");
+    netProceedsDisplay.textContent = currencyFmt.format(netProceeds);
+
+    toggleIneligibleBadge(eligible);
+  }
+
+  function toggleIneligibleBadge(eligible) {
+    const label = document.querySelector('label[for="age"]');
+    if (!label) return;
+    let badge = label.querySelector(".badge");
+    if (!eligible) {
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "badge warn";
+        badge.textContent = "Requires age ≥ 62";
+        label.appendChild(badge);
+      }
+    } else {
+      if (badge) badge.remove();
+    }
+  }
+
+  function bind() {
+    ageRangeEl.addEventListener("input", () => {
+      ageEl.value = ageRangeEl.value;
+      recalc();
+    });
+    ageRangeEl.addEventListener("change", () => {
+      const snapped = clamp(Math.round(parseFloat(ageRangeEl.value)), parseInt(ageRangeEl.min,10), parseInt(ageRangeEl.max,10));
+      ageRangeEl.value = String(snapped);
+      ageEl.value = String(snapped);
+      recalc();
+    });
+
+    ageEl.addEventListener("input", () => {
+      const snapped = clamp(Math.round(parseFloat(ageEl.value || "0")), parseInt(ageEl.min,10), parseInt(ageEl.max,10));
+      ageRangeEl.value = String(snapped);
+      ageEl.value = String(snapped);
+      recalc();
+    });
+
+    ageDecrement.addEventListener("click", () => {
+      const v = clamp(parseInt(ageEl.value || "0",10) - 1, parseInt(ageEl.min,10), parseInt(ageEl.max,10));
+      ageEl.value = String(v);
+      ageRangeEl.value = String(v);
+      recalc();
+    });
+    ageIncrement.addEventListener("click", () => {
+      const v = clamp(parseInt(ageEl.value || "0",10) + 1, parseInt(ageEl.min,10), parseInt(ageEl.max,10));
+      ageEl.value = String(v);
+      ageRangeEl.value = String(v);
+      recalc();
+    });
+
+    homeValueEl.addEventListener("input", recalc);
+    existingMortgagesEl.addEventListener("input", recalc);
+
+    recalc();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bind);
+  } else {
+    bind();
+  }
+})();
+  </script>
 </body>
 </html>
+
