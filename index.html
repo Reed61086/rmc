@@ -425,6 +425,7 @@ footer.site-footer .legal {
 
   /* UI state + elements */
   let mode = "standard";
+  const STORAGE_KEY = "rmc-calculator-state";
 
   const ageRangeEl = document.getElementById("ageRange");
   const ageEl = document.getElementById("age");
@@ -466,6 +467,38 @@ footer.site-footer .legal {
   function clamp(n, min, max) { return Math.min(Math.max(n, min), max); }
 
   function minus(formatted) { return formatted === "$0" ? "$0" : "-" + formatted.replace("-", ""); }
+
+  function persistState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        mode,
+        age: clamp(parseInt(ageEl.value || "0", 10) || 50, 50, 100),
+        homeValue: Math.max(0, parseFloat(homeValueEl.value || "0") || 0),
+        purchasePrice: Math.max(0, parseFloat(purchasePriceEl.value || "0") || 0),
+        existingMortgages: Math.max(0, parseFloat(existingMortgagesEl.value || "0") || 0),
+        cmt: Math.max(0, parseFloat(cmtEl.value || "0") || 0),
+        thirdPartyFees: Math.max(0, parseFloat(thirdPartyFeesEl.value || "0") || 0)
+      }));
+    } catch (e) { /* storage unavailable (private mode) — keep session-only */ }
+  }
+
+  function restoreState() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (e) { saved = null; }
+    if (saved && typeof saved === "object") {
+      if (Number.isFinite(saved.age)) {
+        const age = clamp(Math.round(saved.age), 50, 100);
+        ageEl.value = String(age);
+        ageRangeEl.value = String(age);
+      }
+      if (Number.isFinite(saved.homeValue)) homeValueEl.value = String(Math.max(0, Math.round(saved.homeValue)));
+      if (Number.isFinite(saved.purchasePrice)) purchasePriceEl.value = String(Math.max(0, Math.round(saved.purchasePrice)));
+      if (Number.isFinite(saved.existingMortgages)) existingMortgagesEl.value = String(Math.max(0, Math.round(saved.existingMortgages)));
+      if (Number.isFinite(saved.cmt)) cmtEl.value = String(Math.max(0, saved.cmt));
+      if (Number.isFinite(saved.thirdPartyFees)) thirdPartyFeesEl.value = String(Math.max(0, Math.round(saved.thirdPartyFees)));
+    }
+    setMode(!saved || saved.mode !== "h4p" ? "standard" : "h4p");
+  }
 
   function setMode(next) {
     mode = next;
@@ -553,6 +586,7 @@ footer.site-footer .legal {
     }
 
     toggleIneligibleBadge(eligible);
+    persistState();
   }
 
   function bind() {
@@ -596,7 +630,7 @@ footer.site-footer .legal {
     cmtEl.addEventListener("input", recalc);
     thirdPartyFeesEl.addEventListener("input", recalc);
 
-    recalc();
+    restoreState();
   }
 
   if (document.readyState === "loading") {
