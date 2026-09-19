@@ -18,6 +18,7 @@
   --danger: #b02a37;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body {
   margin: 0;
   padding: 0;
@@ -539,6 +540,7 @@ footer.site-footer .legal {
         ? roundDollars(collateralValue - principalLimit + ufmip + originationFee)
         : 0;
       netProceedsDisplay.textContent = currencyFmt.format(requiredInvestment);
+      firstYearDisplay.textContent = currencyFmt.format(0);
     } else {
       const mandatoryObligations = existingMortgages + totalClosingCosts;
       const netPrincipalLimit = roundDollars(principalLimit - mandatoryObligations);
