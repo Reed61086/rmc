@@ -118,10 +118,6 @@ input[type="range"] { height: 32px; }
 input[type="range"]::-webkit-slider-thumb { width: 28px; height: 28px; }
 input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; }
 
-/* Margin slider display */
-.margin-head { display: flex; justify-content: space-between; align-items: baseline; }
-.margin-value { color: var(--c2-blue); font-weight: 700; font-variant-numeric: tabular-nums; }
-
 .summary { margin-top: 26px; }
 .card {
   background: #fff;
@@ -258,17 +254,6 @@ footer.site-footer .legal {
       </div>
 
       <div class="field">
-        <div class="margin-head">
-          <label for="margin" style="margin-bottom:0;">Lender Margin</label>
-          <span class="margin-value" id="marginValue">2.00%</span>
-        </div>
-        <div class="control tight" style="margin-top:8px;">
-          <input type="range" id="margin" min="1.25" max="3.75" step="0.25" value="2" aria-label="Lender margin" />
-        </div>
-        <small class="hint">Expected rate = 10-year CMT + lender margin.</small>
-      </div>
-
-      <div class="field">
         <label for="cmt">10-Year CMT</label>
         <div class="control with-suffix">
           <input type="number" id="cmt" min="0" max="20" step="0.01" value="4.99" inputmode="decimal" />
@@ -294,6 +279,10 @@ footer.site-footer .legal {
         <div class="row">
           <div class="label">Maximum Claim Amount</div>
           <div class="value" id="mcaDisplay">$0</div>
+        </div>
+        <div class="row">
+          <div class="label">Lender Margin</div>
+          <div class="value" id="marginDisplay">2.50%</div>
         </div>
         <div class="row">
           <div class="label">Expected Interest Rate</div>
@@ -443,8 +432,6 @@ footer.site-footer .legal {
   const homeValueEl = document.getElementById("homeValue");
   const purchasePriceEl = document.getElementById("purchasePrice");
   const existingMortgagesEl = document.getElementById("existingMortgages");
-  const marginEl = document.getElementById("margin");
-  const marginValueEl = document.getElementById("marginValue");
   const cmtEl = document.getElementById("cmt");
   const thirdPartyFeesEl = document.getElementById("thirdPartyFees");
 
@@ -459,6 +446,7 @@ footer.site-footer .legal {
   const netLabel = document.getElementById("netLabel");
 
   const mcaDisplay = document.getElementById("mcaDisplay");
+  const marginDisplay = document.getElementById("marginDisplay");
   const eirDisplay = document.getElementById("eirDisplay");
   const plfDisplay = document.getElementById("plfDisplay");
   const grossLimitDisplay = document.getElementById("grossLimitDisplay");
@@ -521,11 +509,11 @@ footer.site-footer .legal {
       ? Math.max(0, parseFloat(purchasePriceEl.value || "0"))
       : Math.max(0, parseFloat(homeValueEl.value || "0"));
     const existingMortgages = Math.max(0, parseFloat(existingMortgagesEl.value || "0"));
-    const margin = clamp(parseFloat(marginEl.value || "0"), 1.25, 3.75);
+    const margin = isH4p ? 2 : 2.5;
     const cmt = Math.max(0, parseFloat(cmtEl.value || "0"));
     const thirdPartyFees = Math.max(0, parseFloat(thirdPartyFeesEl.value || "0"));
 
-    marginValueEl.textContent = percentFmt.format(margin) + "%";
+    marginDisplay.textContent = percentFmt.format(margin) + "%";
 
     const eligible = age >= 62;
     const maxClaimAmount = roundDollars(Math.min(collateralValue, LENDING_LIMIT));
@@ -603,7 +591,6 @@ footer.site-footer .legal {
     homeValueEl.addEventListener("input", recalc);
     purchasePriceEl.addEventListener("input", recalc);
     existingMortgagesEl.addEventListener("input", recalc);
-    marginEl.addEventListener("input", recalc);
     cmtEl.addEventListener("input", recalc);
     thirdPartyFeesEl.addEventListener("input", recalc);
 
