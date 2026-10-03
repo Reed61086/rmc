@@ -213,13 +213,13 @@ footer.site-footer .legal {
           <div class="age-controls">
             <button type="button" id="ageDecrement" class="age-btn" aria-label="Decrease age">−</button>
             <div class="control tight">
-              <input type="range" id="ageRange" min="50" max="100" step="1" value="62" aria-label="Age slider" />
+              <input type="range" id="ageRange" min="50" max="99" step="1" value="62" aria-label="Age slider" />
             </div>
             <button type="button" id="ageIncrement" class="age-btn" aria-label="Increase age">+</button>
           </div>
 
           <div class="control with-suffix">
-            <input type="number" id="age" min="50" max="100" step="1" value="62" inputmode="numeric" />
+            <input type="number" id="age" min="50" max="99" step="1" value="62" inputmode="numeric" />
             <span class="suffix">years</span>
           </div>
         </div>
@@ -255,13 +255,13 @@ footer.site-footer .legal {
       </div>
 
       <div class="field rate-field">
-        <label for="cmt">10-Year CMT</label>
+        <label for="rateMode">Rate source</label><select id="rateMode"><option value="auto">Latest published weekly CMT</option><option value="manual">Historical / manual scenario</option></select><label for="cmt">1-Year CMT · initial rate index</label>
         <div class="control with-suffix">
-          <input type="number" id="cmt" step="0.01" readonly aria-describedby="rateStatus" />
+          <input type="number" id="cmt" min="0.001" max="20" step="0.001" readonly aria-describedby="rateStatus" />
           <span class="suffix">%</span>
         </div>
-        <p id="rateStatus" class="hint" role="status">Checking the latest published Treasury rate…</p>
-        <div class="rate-actions"><a href="https://home.treasury.gov/treasury-daily-interest-rate-xml-feed" target="_blank" rel="noopener noreferrer">U.S. Treasury source</a><button type="button" id="refreshRate" class="text-button">Refresh rate</button></div>
+        <label for="expectedCmt">10-Year CMT · expected rate index</label><div class="control with-suffix"><input type="number" id="expectedCmt" min="0.001" max="20" step="0.001" readonly /><span class="suffix">%</span></div><p id="rateStatus" class="hint" role="status">Checking the latest published Treasury rate…</p>
+        <div class="rate-actions"><a href="https://fred.stlouisfed.org/series/WGS1YR" target="_blank" rel="noopener noreferrer">1-year source</a><a href="https://fred.stlouisfed.org/series/WGS10YR" target="_blank" rel="noopener noreferrer">10-year source</a><button type="button" id="refreshRate" class="text-button">Refresh rate</button></div>
       </div>
 
       <div class="field">
@@ -282,6 +282,10 @@ footer.site-footer .legal {
         </div>
         <small class="hint">Title, escrow, recording, appraisal, etc.</small>
       </div>
+      <div id="repairsField">
+        <div class="field"><label for="repairs">Estimated repairs</label><div class="control with-prefix"><span class="prefix">$</span><input id="repairs" type="number" min="0" step="1" value="0" inputmode="numeric" /></div><small class="hint">Refinance only. Reserve is 150% of estimated repairs; lender must confirm repair eligibility.</small></div>
+        <div class="field"><label for="repairFee">Additional repair administration fee</label><div class="control with-prefix"><span class="prefix">$</span><input id="repairFee" type="number" min="0" step="1" value="0" inputmode="numeric" /></div><small class="hint">Defaults to $0. Enter only fees not already included in third-party fees. Maximum: greater of $50 or 1.5% of repairs.</small></div>
+      </div>
     </section>
 
     <section class="summary">
@@ -298,7 +302,7 @@ footer.site-footer .legal {
           <div class="value" id="marginDisplay">2.00%</div>
         </div>
         <div class="row">
-          <div class="label">Expected Interest Rate</div>
+          <div class="label">Initial Interest Rate · 1-Year CMT + Margin</div><div class="value" id="initialRateDisplay">—</div></div><div class="row"><div class="label">Expected Interest Rate · 10-Year CMT + Margin</div>
           <div class="value" id="eirDisplay">0.00%</div>
         </div>
         <div class="row">
@@ -330,12 +334,12 @@ footer.site-footer .legal {
           <div class="label">Less Existing Mortgages</div>
           <div class="value negative" id="existingMortgagesDisplay">-$0</div>
         </div>
-        <div class="row total" id="netRow">
+        <div id="repairRows"><div class="row"><div class="label">Repair Reserve (150%)</div><div class="value" id="repairReserveDisplay">—</div></div><div class="row"><div class="label">Mandatory Obligations</div><div class="value" id="mandatoryDisplay">—</div></div><div class="row"><div class="label">Initial Disbursement Limit</div><div class="value" id="idlDisplay">—</div></div><div class="row"><div class="label">Funds Needed to Cover Shortage</div><div class="value" id="shortageDisplay">—</div></div></div><div class="row total" id="netRow">
           <div class="label" id="netLabel">Estimated Net Available Proceeds</div>
           <div class="value strong" id="netProceedsDisplay">$0</div>
         </div>
         <div class="row" id="firstYearRow">
-          <div class="label">First-Year Cash Available (60% cap)</div>
+          <div class="label">Additional First-Year Cash Available</div>
           <div class="value" id="firstYearDisplay">$0</div>
         </div>
       </div>
@@ -346,7 +350,7 @@ footer.site-footer .legal {
         <summary>Understand your estimate</summary>
         <p><strong>Expected rate:</strong> the 10-year Treasury CMT plus the lender margin. This is a calculation assumption, not a quoted note rate.</p>
         <p><strong>Maximum claim amount:</strong> the lesser of the home value and the calculator's lending limit.</p>
-        <p><strong>Principal limit:</strong> the maximum claim amount multiplied by the estimated principal limit factor. This calculator uses a PLF approximation, not an authoritative HUD table lookup.</p>
+        <p><strong>Principal limit:</strong> the maximum claim amount multiplied by the estimated principal limit factor. The official HUD table is used at the expected rate rounded to the nearest one-eighth percent.</p>
         <p><strong>Net proceeds:</strong> the estimated principal limit after mortgage payoff and estimated costs. Underwriting and other required set-asides may change the amount available.</p>
       </details>
 
@@ -357,10 +361,10 @@ footer.site-footer .legal {
       </div>
 
       <p class="note">
-        This is an educational estimate using a Principal Limit Factor approximation, the calculator's
+        This is an educational estimate using the official HUD Principal Limit Factor table, the calculator's
         configured lending limit ($1,209,750), 2.0% UFMIP, capped origination fees ($2,500–$6,000), and estimated
         third-party fees. Purchase investment uses the existing model and excludes third-party fees;
-        budget for those separately. The first-year figure uses a simplified disbursement model.
+        budget for those separately. First-year cash subtracts mandatory obligations from the greater of 60% of principal limit or mandatory obligations plus 10%, capped at the principal limit. Assumes no initial cash draw, LESA, servicing reserve or additional property-charge obligations.
         Actual figures depend on program type, interest rates, mandatory obligations (e.g., taxes, insurance),
         property type, state regulations, and lender underwriting.
       </p>
@@ -426,33 +430,10 @@ footer.site-footer .legal {
     </div>
   </footer>
 
-  <script src="rates.js"></script>
+  <script src="data/hud-plf.js"></script><script src="hecm.js"></script><script src="rates.js"></script>
   <script>
 (function () {
   "use strict";
-
-  /* Ported from reverse_and_relax server/services/plfCalculator.ts */
-  const LENDING_LIMIT = 1209750;      // Existing configured cap; not updated by the CMT feed.
-  const UFMIP_RATE = 0.02;
-
-  function roundDollars(value) { return Math.round(Math.max(0, value)); }
-
-  function calculateOriginationFee(maxClaimAmount) {
-    const raw = maxClaimAmount <= 200000
-      ? maxClaimAmount * 0.02
-      : 200000 * 0.02 + (maxClaimAmount - 200000) * 0.01;
-    return Math.round(Math.min(Math.max(raw, 2500), 6000));
-  }
-
-  function lookupHudPlfTable(age, expectedRate) {
-    const effectiveAge = Math.min(95, Math.max(62, Math.round(age)));
-    const rate = Math.max(0.0506, Math.min(0.10, expectedRate));
-    const ageLift = effectiveAge <= 75
-      ? (effectiveAge - 62) * 0.0055
-      : 13 * 0.0055 + (effectiveAge - 75) * 0.0075;
-    const ratePenalty = (rate - 0.0506) * 5.5;
-    return Number(Math.max(0.20, Math.min(0.66, 0.424 + ageLift - ratePenalty)).toFixed(3));
-  }
 
   /* UI state + elements */
   let mode = "standard";
@@ -466,6 +447,10 @@ footer.site-footer .legal {
   const purchasePriceEl = document.getElementById("purchasePrice");
   const existingMortgagesEl = document.getElementById("existingMortgages");
   const cmtEl = document.getElementById("cmt");
+  const expectedCmtEl = document.getElementById("expectedCmt");
+  const rateModeEl = document.getElementById("rateMode");
+  const repairsEl = document.getElementById("repairs");
+  const repairFeeEl = document.getElementById("repairFee");
   const thirdPartyFeesEl = document.getElementById("thirdPartyFees");
   const marginEl = document.getElementById("margin");
   const marginRangeEl = document.getElementById("marginRange");
@@ -476,25 +461,25 @@ footer.site-footer .legal {
   let currentEstimate = null;
   let reportText = "";
   let cachedRate = null;
-  try { cachedRate = JSON.parse(localStorage.getItem("rmc-treasury-rate") || "null"); } catch (_) {}
+  try { cachedRate = JSON.parse(localStorage.getItem("rmc-weekly-cmt-v2") || "null"); } catch (_) {}
   const rateController = TreasuryRates.createRateController({
     cached: cachedRate,
-    save: observation => localStorage.setItem("rmc-treasury-rate", JSON.stringify(observation)),
+    save: observation => localStorage.setItem("rmc-weekly-cmt-v2", JSON.stringify(observation)),
     onChange: renderRate
   });
   function renderRate() {
     const { observation, status } = rateController.state;
-    cmtEl.value = observation ? observation.value : "";
-    const provenance = observation ? observation.value.toFixed(2) + "% · published " + observation.date + ". " : "";
+    if (rateModeEl.value === "auto") { cmtEl.value = observation ? observation.oneYear : ""; expectedCmtEl.value = observation ? observation.tenYear : ""; }
+    const provenance = observation ? "Week ending " + observation.date + ". " : "";
     const messages = {
-      ready: "Latest published Treasury observation. Checked " + (observation ? new Date(observation.retrievedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : "") + ".",
-      loading: "Checking Treasury…" + (observation ? " Using a historical estimate while checking." : ""),
+      ready: "Latest published weekly Federal Reserve observation. Checked " + (observation ? new Date(observation.retrievedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : "") + ".",
+      loading: "Checking weekly CMT…" + (observation ? " Using a historical estimate while checking." : ""),
       cached: "Saved observation; awaiting verification. Historical estimate only.",
-      stale: "Treasury's observation is more than 7 days old. Historical estimate only.",
+      stale: "Weekly observation or source check is stale. Historical estimate only.",
       error: "Unable to verify the latest rate. " + (observation ? "Historical estimate only." : "Estimates will appear when a rate is available.") + " Retry is available after 15 minutes.",
       unavailable: "No verified rate available. Connect to the internet and refresh."
     };
-    rateStatus.textContent = provenance + messages[status];
+    rateStatus.textContent = rateModeEl.value === "manual" ? "Historical / manual scenario. These rates are not verified as current." : provenance + messages[status];
     rateStatus.dataset.status = status;
     refreshRate.disabled = status === "loading";
     recalc();
@@ -535,11 +520,12 @@ footer.site-footer .legal {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         mode,
-        age: clamp(parseInt(ageEl.value || "0", 10) || 50, 50, 100),
+        age: clamp(parseInt(ageEl.value || "0", 10) || 50, 50, 99),
         homeValue: Math.max(0, parseFloat(homeValueEl.value || "0") || 0),
         purchasePrice: Math.max(0, parseFloat(purchasePriceEl.value || "0") || 0),
         existingMortgages: Math.max(0, parseFloat(existingMortgagesEl.value || "0") || 0),
         margin: Number(marginEl.value),
+        repairs: Number(repairsEl.value), repairFee: Number(repairFeeEl.value),
         thirdPartyFees: Math.max(0, parseFloat(thirdPartyFeesEl.value || "0") || 0)
       }));
     } catch (e) { /* storage unavailable (private mode) — keep session-only */ }
@@ -550,13 +536,15 @@ footer.site-footer .legal {
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (e) { saved = null; }
     if (saved && typeof saved === "object") {
       if (Number.isFinite(saved.age)) {
-        const age = clamp(Math.round(saved.age), 50, 100);
+        const age = clamp(Math.round(saved.age), 50, 99);
         ageEl.value = String(age);
         ageRangeEl.value = String(age);
       }
       if (Number.isFinite(saved.homeValue)) homeValueEl.value = String(Math.max(0, Math.round(saved.homeValue)));
       if (Number.isFinite(saved.purchasePrice)) purchasePriceEl.value = String(Math.max(0, Math.round(saved.purchasePrice)));
       if (Number.isFinite(saved.existingMortgages)) existingMortgagesEl.value = String(Math.max(0, Math.round(saved.existingMortgages)));
+      if(Number.isFinite(saved.repairs) && saved.repairs>=0) repairsEl.value=String(saved.repairs);
+      if(Number.isFinite(saved.repairFee) && saved.repairFee>=0) repairFeeEl.value=String(saved.repairFee);
       // Legacy manual CMT must never override Treasury's observation.
       if (Number.isFinite(saved.margin) && saved.margin >= 0 && saved.margin <= 10) marginEl.value = String(saved.margin);
       if (Number.isFinite(saved.thirdPartyFees)) thirdPartyFeesEl.value = String(Math.max(0, Math.round(saved.thirdPartyFees)));
@@ -577,6 +565,8 @@ footer.site-footer .legal {
     existingMortgagesField.hidden = isH4p;
     existingMortgagesRow.hidden = isH4p;
     firstYearRow.hidden = isH4p;
+    document.getElementById("repairsField").hidden = isH4p;
+    document.getElementById("repairRows").hidden = isH4p;
     cardTitle.textContent = isH4p ? "HECM for Purchase Estimate" : "Refinance Estimate";
     netLabel.textContent = isH4p ? "Required Investment (Cash Needed at Closing)" : "Estimated Net Available Proceeds";
     recalc();
@@ -599,89 +589,51 @@ footer.site-footer .legal {
   }
 
   function recalc() {
-    const fields = [ageEl, mode === "h4p" ? purchasePriceEl : homeValueEl, marginEl, thirdPartyFeesEl];
-    if (mode !== "h4p") fields.push(existingMortgagesEl);
+    const isH4p = mode === "h4p", manual = rateModeEl.value === "manual";
+    const fields = [ageEl, isH4p ? purchasePriceEl : homeValueEl, marginEl, thirdPartyFeesEl, cmtEl, expectedCmtEl];
+    if (!isH4p) fields.push(existingMortgagesEl, repairsEl, repairFeeEl);
     const invalid = fields.find(el => el.value.trim() === "" || !Number.isFinite(Number(el.value)) || !el.validity.valid);
-    const observation = rateController.state.observation;
-    if (invalid || !observation) {
-      currentEstimate = null;
-      openReport.disabled = true;
-      estimateStatus.textContent = invalid ? "Enter a valid " + document.querySelector('label[for="' + invalid.id + '"]').textContent.toLowerCase() + "." : "Waiting for a verified Treasury observation before calculating.";
-      document.querySelectorAll(".summary .value").forEach(el => el.textContent = "—");
-      return;
+    let result;
+    try {
+      if (invalid) throw Error("Enter a valid " + document.querySelector('label[for="' + invalid.id + '"]').textContent.toLowerCase() + ".");
+      result = Hecm.calculateEstimate({
+        age:Number(ageEl.value), value:Number((isH4p?purchasePriceEl:homeValueEl).value),
+        oneYear:Number(cmtEl.value), tenYear:Number(expectedCmtEl.value), margin:Number(marginEl.value),
+        payoff:isH4p?0:Number(existingMortgagesEl.value), fees:Number(thirdPartyFeesEl.value),
+        repairs:isH4p?0:Number(repairsEl.value), repairFee:isH4p?0:Number(repairFeeEl.value), mode
+      });
+    } catch(error) {
+      currentEstimate=null;openReport.disabled=true;estimateStatus.textContent=error.message;
+      document.querySelectorAll(".summary .value").forEach(el=>el.textContent="—");return;
     }
-    const age = clamp(parseInt(ageEl.value || "0", 10), parseInt(ageEl.min, 10), parseInt(ageEl.max, 10));
-    if (String(age) !== ageEl.value) ageEl.value = String(age);
-    if (String(age) !== ageRangeEl.value) ageRangeEl.value = String(age);
-
-    const isH4p = mode === "h4p";
-    const collateralValue = isH4p
-      ? Math.max(0, parseFloat(purchasePriceEl.value || "0"))
-      : Math.max(0, parseFloat(homeValueEl.value || "0"));
-    const existingMortgages = Math.max(0, parseFloat(existingMortgagesEl.value || "0"));
-    const margin = Number(marginEl.value);
-    const cmt = observation.value;
-    const thirdPartyFees = Math.max(0, parseFloat(thirdPartyFeesEl.value || "0"));
-
-    marginDisplay.textContent = percentFmt.format(margin) + "%";
-
-    const eligible = age >= 62;
-    const maxClaimAmount = roundDollars(Math.min(collateralValue, LENDING_LIMIT));
-    const expectedInterestRate = (cmt + margin) / 100;
-    const plf = eligible ? lookupHudPlfTable(age, expectedInterestRate) : 0;
-    const principalLimit = roundDollars(maxClaimAmount * plf);
-    const ufmip = roundDollars(maxClaimAmount * UFMIP_RATE);
-    const originationFee = calculateOriginationFee(maxClaimAmount);
-    const totalClosingCosts = roundDollars(ufmip + originationFee + thirdPartyFees);
-
-    mcaDisplay.textContent = currencyFmt.format(maxClaimAmount);
-    eirDisplay.textContent = percentFmt.format(cmt + margin) + "%";
-    plfDisplay.textContent = numberFmt3.format(plf);
-    grossLimitDisplay.textContent = currencyFmt.format(principalLimit);
-    ufmipDisplay.textContent = minus(currencyFmt.format(ufmip));
-    originationDisplay.textContent = minus(currencyFmt.format(originationFee));
-    thirdPartyDisplay.textContent = minus(currencyFmt.format(thirdPartyFees));
-    closingCostsDisplay.textContent = minus(currencyFmt.format(totalClosingCosts));
-    existingMortgagesDisplay.textContent = minus(currencyFmt.format(existingMortgages));
-
-    if (isH4p) {
-      const requiredInvestment = eligible
-        ? roundDollars(collateralValue - principalLimit + ufmip + originationFee)
-        : 0;
-      netProceedsDisplay.textContent = currencyFmt.format(requiredInvestment);
-      firstYearDisplay.textContent = currencyFmt.format(0);
-    } else {
-      const mandatoryObligations = existingMortgages + totalClosingCosts;
-      const netPrincipalLimit = roundDollars(principalLimit - mandatoryObligations);
-      const sixtyPercentCap = principalLimit * 0.6;
-      const firstYear = mandatoryObligations > sixtyPercentCap
-        ? netPrincipalLimit
-        : roundDollars(sixtyPercentCap - mandatoryObligations);
-      netProceedsDisplay.textContent = currencyFmt.format(netPrincipalLimit);
-      firstYearDisplay.textContent = currencyFmt.format(firstYear);
-    }
-
-    toggleIneligibleBadge(eligible);
-    estimateStatus.textContent = !eligible ? "This calculator requires a borrower age of at least 62. This is not an eligibility decision." : rateController.state.status === "ready" ? "Educational estimate · latest published CMT" : "Historical estimate · latest CMT is not verified";
-    openReport.disabled = !eligible;
-    currentEstimate = eligible ? {
-      mode: isH4p ? "Purchase" : "Refinance", capturedAt: new Date().toISOString(),
-      rate: { ...observation, status: rateController.state.status },
-      assumptions: [
-        [isH4p ? "Purchase price" : "Estimated home value", currencyFmt.format(collateralValue)],
-        ["Borrower age used", String(age)], ["10-year CMT", percentFmt.format(cmt) + "%"],
-        ["Lender margin", percentFmt.format(margin) + "%"], ["Expected rate", percentFmt.format(cmt + margin) + "%"]
+    const currency = value => currencyFmt.format(value);
+    const displays = {mcaDisplay:result.maxClaimAmount,grossLimitDisplay:result.principalLimit,ufmipDisplay:result.ufmip,
+      originationDisplay:result.originationFee,thirdPartyDisplay:Number(thirdPartyFeesEl.value),closingCostsDisplay:result.closingCosts,
+      existingMortgagesDisplay:Number(existingMortgagesEl.value),repairReserveDisplay:result.repairReserve,
+      mandatoryDisplay:result.mandatoryObligations,idlDisplay:result.disbursementLimit,shortageDisplay:result.shortage,
+      netProceedsDisplay:isH4p?result.requiredInvestment:result.netAvailable,firstYearDisplay:result.firstYearCash};
+    Object.entries(displays).forEach(([id,value])=>document.getElementById(id).textContent=currency(value));
+    marginDisplay.textContent=percentFmt.format(Number(marginEl.value))+"%";
+    eirDisplay.textContent=percentFmt.format(result.expectedRate)+"%";
+    document.getElementById("initialRateDisplay").textContent=percentFmt.format(result.initialRate)+"%";
+    plfDisplay.textContent=numberFmt3.format(result.factor);
+    estimateStatus.textContent=(manual?"Historical / manual scenario":rateController.state.status==="ready"?"Educational estimate · latest published weekly CMT":"Historical estimate · latest CMT is not verified")+
+      " · Assumes no initial cash draw, LESA, servicing reserve or additional property-charge obligations.";
+    openReport.disabled=false;
+    currentEstimate={
+      mode:isH4p?"Purchase":"Refinance",capturedAt:new Date().toISOString(),
+      rate:manual?{date:"manual scenario",source:Hecm.tableSource,status:"manual"}:{...rateController.state.observation,status:rateController.state.status},
+      assumptions:[
+        [isH4p?"Purchase price":"Estimated home value",currency(Number((isH4p?purchasePriceEl:homeValueEl).value))],
+        ["Borrower age used",ageEl.value],["1-year CMT",cmtEl.value+"%"],["10-year CMT",expectedCmtEl.value+"%"],
+        ["Lender margin",marginEl.value+"%"],["Initial rate",result.initialRate+"%"],["Expected rate",result.expectedRate+"%"],
+        ["HUD lookup rate",result.lookupRate+"%"],["HUD table version",result.tableVersion],
+        ["Estimated repairs",currency(isH4p?0:Number(repairsEl.value))],["Additional repair fee",currency(result.repairFee)],
+        ["Initial cash draw / LESA / servicing reserve / other property-charge obligations","$0 assumed"]
       ],
-      results: [
-        ["Maximum claim amount", currencyFmt.format(maxClaimAmount)], ["Estimated PLF (approximation)", numberFmt3.format(plf)],
-        ["Gross principal limit", currencyFmt.format(principalLimit)], ["Initial mortgage insurance", currencyFmt.format(ufmip)],
-        ["Origination fee", currencyFmt.format(originationFee)], ["Third-party fees", currencyFmt.format(thirdPartyFees)],
-        ["Total estimated closing costs", currencyFmt.format(totalClosingCosts)],
-        ...(!isH4p ? [["Mortgage payoff", currencyFmt.format(existingMortgages)]] : []),
-        [netLabel.textContent, netProceedsDisplay.textContent],
-        ...(!isH4p ? [["First-year cash (existing simplified cap model)", firstYearDisplay.textContent]] : [])
-      ]
-    } : null;
+      results:[["Principal Limit Factor",numberFmt3.format(result.factor)],...Object.entries(displays).filter(([id])=>!isH4p||!["existingMortgagesDisplay","repairReserveDisplay","mandatoryDisplay","idlDisplay","shortageDisplay","firstYearDisplay"].includes(id)).map(([id,value])=>[
+        document.getElementById(id).parentElement.querySelector(".label").textContent,currency(value)])]
+    };
     persistState();
   }
 
@@ -728,6 +680,8 @@ footer.site-footer .legal {
     marginRangeEl.addEventListener("input", () => { marginEl.value = marginRangeEl.value; recalc(); });
     thirdPartyFeesEl.addEventListener("input", recalc);
 
+    for (const el of [repairsEl,repairFeeEl,cmtEl,expectedCmtEl]) el.addEventListener("input",recalc);
+    rateModeEl.addEventListener("change",()=>{ cmtEl.readOnly=expectedCmtEl.readOnly=rateModeEl.value==="auto"; if(rateModeEl.value==="manual"){cmtEl.value="";expectedCmtEl.value="";} renderRate(); });
     restoreState();
     renderRate();
     refreshRate.addEventListener("click", () => rateController.refresh());
@@ -745,15 +699,15 @@ footer.site-footer .legal {
     openReport.addEventListener("click", () => {
       if (!currentEstimate) return;
       const snapshot = JSON.parse(JSON.stringify(currentEstimate));
-      const rateCopy = snapshot.rate.value.toFixed(2) + "% · published " + snapshot.rate.date + " · " +
-        (snapshot.rate.status === "ready" ? "latest published observation at capture" : "historical observation; latest rate not verified");
-      const caveat = "Educational estimate only. PLF is approximated, not a HUD table lookup. Figures depend on appraisal, underwriting, required set-asides and actual lender terms. The first-year model is simplified. Purchase cash uses the existing model, which excludes third-party fees from required investment; budget for those separately. No loan approval or proceeds are guaranteed.";
+      const rateCopy = snapshot.rate.date + " · " + (snapshot.rate.status === "ready" ? "latest published weekly observation at capture" : "historical / manual observation; latest rate not verified");
+      const caveat = "Educational estimate only. Official HUD PLF table lookup. No initial cash draw, LESA, servicing reserve or other property-charge obligations are included. Repair reserve is withheld, not available cash. Lender must confirm repair eligibility. Figures depend on appraisal, underwriting and actual lender terms. Purchase cash preserves the existing formula excluding third-party fees; budget separately. No loan approval or proceeds are guaranteed.";
       document.getElementById("reportTitle").textContent = snapshot.mode + " estimate report";
       content.replaceChildren();
       function paragraph(text) { const p = document.createElement("p"); p.textContent = text; content.appendChild(p); }
       paragraph("Captured " + new Date(snapshot.capturedAt).toLocaleString());
-      paragraph("10-year CMT: " + rateCopy);
-      const source = document.createElement("a"); source.href = snapshot.rate.source; source.textContent = "U.S. Treasury rate source"; source.target = "_blank"; source.rel = "noopener noreferrer"; content.appendChild(source);
+      paragraph("Rate provenance: " + rateCopy);
+      if (snapshot.rate.checkedAt) paragraph("Source checked " + snapshot.rate.checkedAt + "; calculator retrieved " + new Date(snapshot.rate.retrievedAt).toISOString());
+      const source = document.createElement("a"); source.href = snapshot.rate.source; source.textContent = "Rate / HUD table source"; source.target = "_blank"; source.rel = "noopener noreferrer"; content.appendChild(source);
       for (const [title, rows] of [["Assumptions", snapshot.assumptions], ["Calculated values", snapshot.results]]) {
         const heading = document.createElement("h3"); heading.textContent = title; content.appendChild(heading);
         const list = document.createElement("dl"); list.className = "report-values";

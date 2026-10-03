@@ -70,6 +70,9 @@ button:disabled { opacity: .6; cursor: not-allowed; }
   .report-values { grid-template-columns: 1fr; }
   .report-values dt { border-bottom: 0; padding-bottom: 0; }
 }
+.rate-field select { width: 100%; min-height: 48px; margin-bottom: 16px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--ink); font: inherit; }
+#repairsField { display: grid; gap: 12px; }
+#repairsField[hidden] { display: none; }
 @media print {
   body { background: white; font-size: 11pt; }
   body:has(#report:not([hidden])) .topbar,

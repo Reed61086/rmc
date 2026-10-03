@@ -1,0 +1,31 @@
+name: Refresh weekly CMT
+on:
+  schedule:
+    - cron: '15 23 * * 1-5'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: weekly-cmt
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/update-cmt.py
+      - name: Publish validated rate asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- data/cmt-weekly.json; then exit 0; fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add data/cmt-weekly.json
+          git commit -m "Refresh verified weekly CMT"
+          git push
+          gh api --method POST repos/$GITHUB_REPOSITORY/pages/builds
