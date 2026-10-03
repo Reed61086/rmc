@@ -56,7 +56,6 @@ h1 { margin: 0 0 8px; font-size: 2.25rem; font-weight: 700; color: var(--dark-bl
   gap: 12px;
   margin: 0 0 22px;
 }
-@media (max-width: 640px) { .mode-toggle { grid-template-columns: 1fr; } }
 .mode-btn {
   padding: 16px 14px;
   border: 1px solid var(--border);
@@ -179,6 +178,7 @@ footer.site-footer .legal {
   margin: 0 auto 24px;
 }
   </style>
+  <link rel="stylesheet" href="calculator.css" />
 </head>
 <body>
   <nav class="topbar" aria-label="Site header">
@@ -196,11 +196,11 @@ footer.site-footer .legal {
 
     <div class="mode-toggle" role="group" aria-label="Calculator mode">
       <button type="button" id="modeStandard" class="mode-btn active" aria-pressed="true">
-        Refinance Existing Home
+        Refinance
         <small>Pay off your mortgage and access your equity</small>
       </button>
       <button type="button" id="modeH4p" class="mode-btn" aria-pressed="false">
-        Purchase a New Home
+        Purchase
         <small>HECM for Purchase (H4P) — buy with no monthly mortgage payments</small>
       </button>
     </div>
@@ -231,7 +231,7 @@ footer.site-footer .legal {
         <label for="homeValue">Home Value</label>
         <div class="control with-prefix">
           <span class="prefix">$</span>
-          <input type="number" id="homeValue" min="0" step="1000" value="600000" />
+          <input type="number" id="homeValue" min="1" step="1" value="600000" inputmode="numeric" />
         </div>
         <small class="hint">Market value of your home.</small>
       </div>
@@ -240,7 +240,7 @@ footer.site-footer .legal {
         <label for="purchasePrice">New Home Purchase Price</label>
         <div class="control with-prefix">
           <span class="prefix">$</span>
-          <input type="number" id="purchasePrice" min="0" step="1000" value="1000000" />
+          <input type="number" id="purchasePrice" min="1" step="1" value="1000000" inputmode="numeric" />
         </div>
         <small class="hint">Price of the home you are buying.</small>
       </div>
@@ -249,31 +249,43 @@ footer.site-footer .legal {
         <label for="existingMortgages">Existing Mortgage Balance</label>
         <div class="control with-prefix">
           <span class="prefix">$</span>
-          <input type="number" id="existingMortgages" min="0" step="1000" value="0" />
+          <input type="number" id="existingMortgages" min="0" step="1" value="0" inputmode="numeric" />
         </div>
         <small class="hint">Total balance of mortgages/loans to be paid off at closing.</small>
       </div>
 
-      <div class="field">
+      <div class="field rate-field">
         <label for="cmt">10-Year CMT</label>
         <div class="control with-suffix">
-          <input type="number" id="cmt" min="0" max="20" step="0.01" value="4.99" inputmode="decimal" />
+          <input type="number" id="cmt" step="0.01" readonly aria-describedby="rateStatus" />
           <span class="suffix">%</span>
         </div>
-        <small class="hint">Treasury index the expected interest rate is based on. Adjust to today's rate.</small>
+        <p id="rateStatus" class="hint" role="status">Checking the latest published Treasury rate…</p>
+        <div class="rate-actions"><a href="https://home.treasury.gov/treasury-daily-interest-rate-xml-feed" target="_blank" rel="noopener noreferrer">U.S. Treasury source</a><button type="button" id="refreshRate" class="text-button">Refresh rate</button></div>
+      </div>
+
+      <div class="field">
+        <label for="margin">Lender Margin</label>
+        <div class="control with-suffix">
+          <input type="number" id="margin" min="0" max="10" step="0.001" value="2" inputmode="decimal" />
+          <span class="suffix">%</span>
+        </div>
+        <input type="range" id="marginRange" min="0" max="10" step="0.001" value="2" aria-label="Lender margin slider" />
+        <small class="hint">Defaults to 2% in both modes. Your lender's actual margin may differ.</small>
       </div>
 
       <div class="field">
         <label for="thirdPartyFees">Third-Party Fees</label>
         <div class="control with-prefix">
           <span class="prefix">$</span>
-          <input type="number" id="thirdPartyFees" min="0" step="100" value="2500" />
+          <input type="number" id="thirdPartyFees" min="0" step="1" value="2500" inputmode="numeric" />
         </div>
         <small class="hint">Title, escrow, recording, appraisal, etc.</small>
       </div>
     </section>
 
     <section class="summary">
+      <p id="estimateStatus" class="estimate-status" role="status"></p>
       <div class="card">
         <div class="card-title" id="cardTitle">Refinance Estimate</div>
 
@@ -283,7 +295,7 @@ footer.site-footer .legal {
         </div>
         <div class="row">
           <div class="label">Lender Margin</div>
-          <div class="value" id="marginDisplay">2.50%</div>
+          <div class="value" id="marginDisplay">2.00%</div>
         </div>
         <div class="row">
           <div class="label">Expected Interest Rate</div>
@@ -328,6 +340,16 @@ footer.site-footer .legal {
         </div>
       </div>
 
+      <div class="report-action"><button type="button" class="btn-apply" id="openReport" disabled>View estimate report</button><span>Inputs, rate source &amp; cost breakdown</span></div>
+
+      <details class="explanation">
+        <summary>Understand your estimate</summary>
+        <p><strong>Expected rate:</strong> the 10-year Treasury CMT plus the lender margin. This is a calculation assumption, not a quoted note rate.</p>
+        <p><strong>Maximum claim amount:</strong> the lesser of the home value and the calculator's lending limit.</p>
+        <p><strong>Principal limit:</strong> the maximum claim amount multiplied by the estimated principal limit factor. This calculator uses a PLF approximation, not an authoritative HUD table lookup.</p>
+        <p><strong>Net proceeds:</strong> the estimated principal limit after mortgage payoff and estimated costs. Underwriting and other required set-asides may change the amount available.</p>
+      </details>
+
       <div class="cta">
         <a class="btn-apply" href="https://calendly.com/reed23/15min?back=1" target="_blank" rel="noopener noreferrer">
           Schedule a Call with Reed Olson, our Reverse Mortgage Specialist
@@ -335,12 +357,20 @@ footer.site-footer .legal {
       </div>
 
       <p class="note">
-        This is an educational estimate based on a HUD-style Principal Limit Factor table (2026 HECM program,
-        lending limit $1,209,750), 2.0% UFMIP, the HUD-capped origination fee ($2,500–$6,000), and estimated
-        third-party fees. For HECM for Purchase, the required investment is the cash needed at closing.
+        This is an educational estimate using a Principal Limit Factor approximation, the calculator's
+        configured lending limit ($1,209,750), 2.0% UFMIP, capped origination fees ($2,500–$6,000), and estimated
+        third-party fees. Purchase investment uses the existing model and excludes third-party fees;
+        budget for those separately. The first-year figure uses a simplified disbursement model.
         Actual figures depend on program type, interest rates, mandatory obligations (e.g., taxes, insurance),
         property type, state regulations, and lender underwriting.
       </p>
+    </section>
+    <section id="report" class="report" hidden aria-labelledby="reportTitle">
+      <div class="report-header"><div><p class="eyebrow">YOUR ESTIMATE</p><h2 id="reportTitle" tabindex="-1">Estimate report</h2></div><button type="button" id="closeReport" class="text-button">Back to calculator</button></div>
+      <p class="note">A snapshot of your inputs when this report was opened. Educational estimate only; not a loan offer or approval.</p>
+      <div id="reportContent"></div>
+      <div class="report-buttons"><button type="button" id="shareReport" class="btn-apply">Share report</button><button type="button" id="printReport" class="text-button">Print / save PDF</button><button type="button" id="copyReport" class="text-button">Copy text</button></div>
+      <p id="shareStatus" role="status" class="note"></p>
     </section>
   </main>
 
@@ -396,12 +426,13 @@ footer.site-footer .legal {
     </div>
   </footer>
 
+  <script src="rates.js"></script>
   <script>
 (function () {
   "use strict";
 
   /* Ported from reverse_and_relax server/services/plfCalculator.ts */
-  const LENDING_LIMIT = 1209750;      // HECM 2026 maximum claim amount
+  const LENDING_LIMIT = 1209750;      // Existing configured cap; not updated by the CMT feed.
   const UFMIP_RATE = 0.02;
 
   function roundDollars(value) { return Math.round(Math.max(0, value)); }
@@ -436,6 +467,38 @@ footer.site-footer .legal {
   const existingMortgagesEl = document.getElementById("existingMortgages");
   const cmtEl = document.getElementById("cmt");
   const thirdPartyFeesEl = document.getElementById("thirdPartyFees");
+  const marginEl = document.getElementById("margin");
+  const marginRangeEl = document.getElementById("marginRange");
+  const rateStatus = document.getElementById("rateStatus");
+  const refreshRate = document.getElementById("refreshRate");
+  const estimateStatus = document.getElementById("estimateStatus");
+  const openReport = document.getElementById("openReport");
+  let currentEstimate = null;
+  let reportText = "";
+  let cachedRate = null;
+  try { cachedRate = JSON.parse(localStorage.getItem("rmc-treasury-rate") || "null"); } catch (_) {}
+  const rateController = TreasuryRates.createRateController({
+    cached: cachedRate,
+    save: observation => localStorage.setItem("rmc-treasury-rate", JSON.stringify(observation)),
+    onChange: renderRate
+  });
+  function renderRate() {
+    const { observation, status } = rateController.state;
+    cmtEl.value = observation ? observation.value : "";
+    const provenance = observation ? observation.value.toFixed(2) + "% · published " + observation.date + ". " : "";
+    const messages = {
+      ready: "Latest published Treasury observation. Checked " + (observation ? new Date(observation.retrievedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : "") + ".",
+      loading: "Checking Treasury…" + (observation ? " Using a historical estimate while checking." : ""),
+      cached: "Saved observation; awaiting verification. Historical estimate only.",
+      stale: "Treasury's observation is more than 7 days old. Historical estimate only.",
+      error: "Unable to verify the latest rate. " + (observation ? "Historical estimate only." : "Estimates will appear when a rate is available.") + " Retry is available after 15 minutes.",
+      unavailable: "No verified rate available. Connect to the internet and refresh."
+    };
+    rateStatus.textContent = provenance + messages[status];
+    rateStatus.dataset.status = status;
+    refreshRate.disabled = status === "loading";
+    recalc();
+  }
 
   const modeStandardBtn = document.getElementById("modeStandard");
   const modeH4pBtn = document.getElementById("modeH4p");
@@ -476,7 +539,7 @@ footer.site-footer .legal {
         homeValue: Math.max(0, parseFloat(homeValueEl.value || "0") || 0),
         purchasePrice: Math.max(0, parseFloat(purchasePriceEl.value || "0") || 0),
         existingMortgages: Math.max(0, parseFloat(existingMortgagesEl.value || "0") || 0),
-        cmt: Math.max(0, parseFloat(cmtEl.value || "0") || 0),
+        margin: Number(marginEl.value),
         thirdPartyFees: Math.max(0, parseFloat(thirdPartyFeesEl.value || "0") || 0)
       }));
     } catch (e) { /* storage unavailable (private mode) — keep session-only */ }
@@ -494,10 +557,12 @@ footer.site-footer .legal {
       if (Number.isFinite(saved.homeValue)) homeValueEl.value = String(Math.max(0, Math.round(saved.homeValue)));
       if (Number.isFinite(saved.purchasePrice)) purchasePriceEl.value = String(Math.max(0, Math.round(saved.purchasePrice)));
       if (Number.isFinite(saved.existingMortgages)) existingMortgagesEl.value = String(Math.max(0, Math.round(saved.existingMortgages)));
-      if (Number.isFinite(saved.cmt)) cmtEl.value = String(Math.max(0, saved.cmt));
+      // Legacy manual CMT must never override Treasury's observation.
+      if (Number.isFinite(saved.margin) && saved.margin >= 0 && saved.margin <= 10) marginEl.value = String(saved.margin);
       if (Number.isFinite(saved.thirdPartyFees)) thirdPartyFeesEl.value = String(Math.max(0, Math.round(saved.thirdPartyFees)));
     }
     setMode(!saved || saved.mode !== "h4p" ? "standard" : "h4p");
+    marginRangeEl.value = marginEl.value;
   }
 
   function setMode(next) {
@@ -534,6 +599,17 @@ footer.site-footer .legal {
   }
 
   function recalc() {
+    const fields = [ageEl, mode === "h4p" ? purchasePriceEl : homeValueEl, marginEl, thirdPartyFeesEl];
+    if (mode !== "h4p") fields.push(existingMortgagesEl);
+    const invalid = fields.find(el => el.value.trim() === "" || !Number.isFinite(Number(el.value)) || !el.validity.valid);
+    const observation = rateController.state.observation;
+    if (invalid || !observation) {
+      currentEstimate = null;
+      openReport.disabled = true;
+      estimateStatus.textContent = invalid ? "Enter a valid " + document.querySelector('label[for="' + invalid.id + '"]').textContent.toLowerCase() + "." : "Waiting for a verified Treasury observation before calculating.";
+      document.querySelectorAll(".summary .value").forEach(el => el.textContent = "—");
+      return;
+    }
     const age = clamp(parseInt(ageEl.value || "0", 10), parseInt(ageEl.min, 10), parseInt(ageEl.max, 10));
     if (String(age) !== ageEl.value) ageEl.value = String(age);
     if (String(age) !== ageRangeEl.value) ageRangeEl.value = String(age);
@@ -543,8 +619,8 @@ footer.site-footer .legal {
       ? Math.max(0, parseFloat(purchasePriceEl.value || "0"))
       : Math.max(0, parseFloat(homeValueEl.value || "0"));
     const existingMortgages = Math.max(0, parseFloat(existingMortgagesEl.value || "0"));
-    const margin = isH4p ? 2 : 2.5;
-    const cmt = Math.max(0, parseFloat(cmtEl.value || "0"));
+    const margin = Number(marginEl.value);
+    const cmt = observation.value;
     const thirdPartyFees = Math.max(0, parseFloat(thirdPartyFeesEl.value || "0"));
 
     marginDisplay.textContent = percentFmt.format(margin) + "%";
@@ -586,6 +662,26 @@ footer.site-footer .legal {
     }
 
     toggleIneligibleBadge(eligible);
+    estimateStatus.textContent = !eligible ? "This calculator requires a borrower age of at least 62. This is not an eligibility decision." : rateController.state.status === "ready" ? "Educational estimate · latest published CMT" : "Historical estimate · latest CMT is not verified";
+    openReport.disabled = !eligible;
+    currentEstimate = eligible ? {
+      mode: isH4p ? "Purchase" : "Refinance", capturedAt: new Date().toISOString(),
+      rate: { ...observation, status: rateController.state.status },
+      assumptions: [
+        [isH4p ? "Purchase price" : "Estimated home value", currencyFmt.format(collateralValue)],
+        ["Borrower age used", String(age)], ["10-year CMT", percentFmt.format(cmt) + "%"],
+        ["Lender margin", percentFmt.format(margin) + "%"], ["Expected rate", percentFmt.format(cmt + margin) + "%"]
+      ],
+      results: [
+        ["Maximum claim amount", currencyFmt.format(maxClaimAmount)], ["Estimated PLF (approximation)", numberFmt3.format(plf)],
+        ["Gross principal limit", currencyFmt.format(principalLimit)], ["Initial mortgage insurance", currencyFmt.format(ufmip)],
+        ["Origination fee", currencyFmt.format(originationFee)], ["Third-party fees", currencyFmt.format(thirdPartyFees)],
+        ["Total estimated closing costs", currencyFmt.format(totalClosingCosts)],
+        ...(!isH4p ? [["Mortgage payoff", currencyFmt.format(existingMortgages)]] : []),
+        [netLabel.textContent, netProceedsDisplay.textContent],
+        ...(!isH4p ? [["First-year cash (existing simplified cap model)", firstYearDisplay.textContent]] : [])
+      ]
+    } : null;
     persistState();
   }
 
@@ -605,6 +701,7 @@ footer.site-footer .legal {
     });
 
     ageEl.addEventListener("input", () => {
+      if (ageEl.value === "" || !ageEl.validity.valid) { recalc(); return; }
       const snapped = clamp(Math.round(parseFloat(ageEl.value || "0")), parseInt(ageEl.min, 10), parseInt(ageEl.max, 10));
       ageRangeEl.value = String(snapped);
       ageEl.value = String(snapped);
@@ -627,10 +724,61 @@ footer.site-footer .legal {
     homeValueEl.addEventListener("input", recalc);
     purchasePriceEl.addEventListener("input", recalc);
     existingMortgagesEl.addEventListener("input", recalc);
-    cmtEl.addEventListener("input", recalc);
+    marginEl.addEventListener("input", () => { marginRangeEl.value = marginEl.value; recalc(); });
+    marginRangeEl.addEventListener("input", () => { marginEl.value = marginRangeEl.value; recalc(); });
     thirdPartyFeesEl.addEventListener("input", recalc);
 
     restoreState();
+    renderRate();
+    refreshRate.addEventListener("click", () => rateController.refresh());
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) rateController.refresh(); });
+    window.addEventListener("online", () => rateController.refresh());
+    setInterval(() => { if (!document.hidden) rateController.refresh(); }, 15 * 60 * 1000);
+    rateController.refresh();
+    bindReport();
+  }
+
+  function bindReport() {
+    const report = document.getElementById("report");
+    const content = document.getElementById("reportContent");
+    const shareStatus = document.getElementById("shareStatus");
+    openReport.addEventListener("click", () => {
+      if (!currentEstimate) return;
+      const snapshot = JSON.parse(JSON.stringify(currentEstimate));
+      const rateCopy = snapshot.rate.value.toFixed(2) + "% · published " + snapshot.rate.date + " · " +
+        (snapshot.rate.status === "ready" ? "latest published observation at capture" : "historical observation; latest rate not verified");
+      const caveat = "Educational estimate only. PLF is approximated, not a HUD table lookup. Figures depend on appraisal, underwriting, required set-asides and actual lender terms. The first-year model is simplified. Purchase cash uses the existing model, which excludes third-party fees from required investment; budget for those separately. No loan approval or proceeds are guaranteed.";
+      document.getElementById("reportTitle").textContent = snapshot.mode + " estimate report";
+      content.replaceChildren();
+      function paragraph(text) { const p = document.createElement("p"); p.textContent = text; content.appendChild(p); }
+      paragraph("Captured " + new Date(snapshot.capturedAt).toLocaleString());
+      paragraph("10-year CMT: " + rateCopy);
+      const source = document.createElement("a"); source.href = snapshot.rate.source; source.textContent = "U.S. Treasury rate source"; source.target = "_blank"; source.rel = "noopener noreferrer"; content.appendChild(source);
+      for (const [title, rows] of [["Assumptions", snapshot.assumptions], ["Calculated values", snapshot.results]]) {
+        const heading = document.createElement("h3"); heading.textContent = title; content.appendChild(heading);
+        const list = document.createElement("dl"); list.className = "report-values";
+        rows.forEach(([label, value]) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = label; dd.textContent = value; list.append(dt, dd); });
+        content.appendChild(list);
+      }
+      paragraph(caveat);
+      reportText = [snapshot.mode + " estimate report", "Captured " + snapshot.capturedAt, "CMT: " + rateCopy, snapshot.rate.source,
+        ...snapshot.assumptions.map(row => row.join(": ")), ...snapshot.results.map(row => row.join(": ")), caveat].join("\n");
+      shareStatus.textContent = "";
+      report.hidden = false;
+      document.getElementById("reportTitle").focus();
+      report.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    document.getElementById("closeReport").addEventListener("click", () => { report.hidden = true; openReport.focus(); });
+    document.getElementById("printReport").addEventListener("click", () => window.print());
+    document.getElementById("copyReport").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(reportText); shareStatus.textContent = "Report text copied. Nothing has been sent."; }
+      catch (_) { shareStatus.textContent = "Copy is unavailable. Use Print / save PDF instead."; }
+    });
+    document.getElementById("shareReport").addEventListener("click", async () => {
+      if (!navigator.share) { shareStatus.textContent = "Sharing is unavailable in this browser. Use Copy text or Print / save PDF."; return; }
+      try { await navigator.share({ title: "Reverse mortgage estimate", text: reportText }); shareStatus.textContent = "Share dialog finished. Delivery is not confirmed."; }
+      catch (error) { shareStatus.textContent = error.name === "AbortError" ? "Sharing cancelled. Nothing is confirmed sent." : "Unable to share. Use Copy text or Print / save PDF."; }
+    });
   }
 
   if (document.readyState === "loading") {
