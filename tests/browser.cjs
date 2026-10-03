@@ -5,8 +5,10 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const origin = 'https://reed61086.github.io/rmc/';
 const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-const previousDate = new Date(Date.parse(date) - 86400000).toISOString().slice(0, 10);
-const fixture = (value = 4.3, observationDate = date) => `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"><entry><d:NEW_DATE>${observationDate}T00:00:00</d:NEW_DATE><d:BC_10YEAR>${value}</d:BC_10YEAR></entry></feed>`;
+const friday = new Date(Date.parse(date)); friday.setUTCDate(friday.getUTCDate()-((friday.getUTCDay()+2)%7));
+const weekDate=friday.toISOString().slice(0,10);
+const previousDate = new Date(Date.parse(weekDate) - 7*86400000).toISOString().slice(0, 10);
+const fixture = (value = 4.3, observationDate = weekDate) => JSON.stringify({date:observationDate,oneYear:value,tenYear:value,checkedAt:new Date(Date.now()-60000).toISOString()});
 async function localAssets(page) {
   // Exercise the deployed origin with local candidate assets, without publishing.
   await page.route(origin + '**', route => {
@@ -28,7 +30,7 @@ async function localAssets(page) {
     await localAssets(page);
     await page.clock.install({ time: new Date() });
     let requests = 0, response = fixture(4.3, previousDate);
-    await page.route('https://home.treasury.gov/**', route => { requests++; return route.fulfill({ body: response, contentType: 'application/xml', headers: { 'access-control-allow-origin': '*' } }); });
+    await page.route(origin + 'data/cmt-weekly.json', route => { requests++; return route.fulfill({ body: response, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' } }); });
     await page.addInitScript(() => Object.defineProperty(navigator, 'share', { value: undefined, configurable: true }));
     await page.addInitScript(() => localStorage.setItem('rmc-calculator-state', JSON.stringify({ mode: 'standard', age: 62, homeValue: 600000, cmt: 9.99 })));
     await page.goto(origin);
@@ -96,26 +98,39 @@ async function localAssets(page) {
     await page.screenshot({ path: path.join(root, 'test-results/desktop.png'), fullPage: true });
     assert.deepEqual(errors, []);
     console.log('PASS: mobile widths, desktop parity, 2% defaults, legacy CMT migration, input validation, modes, report snapshot, share fallback, print and clean JS console');
+    await page.locator('#modeStandard').click();
+    await page.locator('#rateMode').selectOption('manual');
+    for(const [id,value] of Object.entries({age:'79',homeValue:'300000',existingMortgages:'80000',thirdPartyFees:'2459',repairs:'6000',margin:'2',cmt:'4.15',expectedCmt:'4.78'})) await page.locator('#'+id).fill(value);
+    for(const [id,value] of Object.entries({grossLimitDisplay:'$133,200',repairReserveDisplay:'$9,000',mandatoryDisplay:'$102,459',idlDisplay:'$115,779',netProceedsDisplay:'$30,741',firstYearDisplay:'$13,320',initialRateDisplay:'6.15%',eirDisplay:'6.78%'})) assert.equal(await page.locator('#'+id).textContent(),value,id);
+    await page.locator('#openReport').click();
+    assert.ok((await page.locator('#reportContent').textContent()).includes('6.75%'));
+    await page.locator('#repairs').fill('-1');
+    assert.equal(await page.locator('#openReport').isDisabled(),true);
+    await page.locator('#repairs').fill('6000');
+    await page.locator('#modeH4p').click();
+    assert.equal(await page.locator('#repairsField').isVisible(),false);
+    assert.deepEqual(errors,[]);
+    console.log('PASS: exact borrower benchmark, repair reserve, rate separation, manual provenance and invalid repair input');
     await context.close();
 
     const offlineContext = await browser.newContext();
     const offline = await offlineContext.newPage();
     await localAssets(offline);
-    await offline.route('https://home.treasury.gov/**', route => route.fulfill({ status: 503, body: 'Unavailable', headers: { 'access-control-allow-origin': '*' } }));
+    await offline.route(origin + 'data/cmt-weekly.json', route => route.fulfill({ status: 503, body: 'Unavailable', headers: { 'access-control-allow-origin': '*' } }));
     await offline.goto(origin);
     await offline.waitForFunction(() => document.querySelector('#rateStatus').dataset.status === 'error');
     assert.equal(await offline.locator('#openReport').isDisabled(), true);
     assert.equal(await offline.locator('#cmt').inputValue(), '');
-    console.log('PASS: Treasury failure without cache blocks estimates');
+    console.log('PASS: Weekly rate failure without cache blocks estimates');
     await offlineContext.close();
 
     const cachedContext = await browser.newContext();
     const cached = await cachedContext.newPage();
     await localAssets(cached);
     await cached.clock.install({ time: new Date() });
-    await cached.addInitScript(({ date }) => localStorage.setItem('rmc-treasury-rate', JSON.stringify({ date, value: 4.1, retrievedAt: Date.now() - 60000 })), { date: previousDate });
+    await cached.addInitScript(({ date }) => localStorage.setItem('rmc-weekly-cmt-v2', JSON.stringify({ date, oneYear:4.1, tenYear:4.1, checkedAt:new Date(Date.now()-60000).toISOString(), retrievedAt: Date.now() - 60000 })), { date: previousDate });
     let recovered = false;
-    await cached.route('https://home.treasury.gov/**', route => route.fulfill({ body: recovered ? fixture() : '<broken', contentType: 'application/xml', headers: { 'access-control-allow-origin': '*' } }));
+    await cached.route(origin + 'data/cmt-weekly.json', route => route.fulfill({ body: recovered ? fixture() : '{broken', contentType: 'application/json', headers: { 'access-control-allow-origin': '*' } }));
     await cached.goto(origin);
     await cached.waitForFunction(() => document.querySelector('#rateStatus').dataset.status === 'error');
     assert.equal(await cached.locator('#cmt').inputValue(), '4.1');
@@ -126,7 +141,7 @@ async function localAssets(page) {
     await cached.waitForFunction(() => document.querySelector('#rateStatus').dataset.status === 'ready');
     assert.equal(await cached.locator('#cmt').inputValue(), '4.3');
     assert.equal(await cached.locator('#homeValue').inputValue(), '900000');
-    console.log('PASS: malformed provider XML preserves labeled cached rate; timed recovery preserves borrower inputs');
+    console.log('PASS: malformed rate JSON preserves labeled cached rate; timed recovery preserves borrower inputs');
     await cachedContext.close();
 
     if (process.env.LIVE_CMT === '1') {
@@ -135,7 +150,7 @@ async function localAssets(page) {
       await live.goto(origin);
       await live.waitForFunction(() => ['ready', 'stale', 'error'].includes(document.querySelector('#rateStatus').dataset.status), { timeout: 30000 });
       assert.equal(await live.locator('#rateStatus').getAttribute('data-status'), 'ready');
-      console.log('PASS: live Treasury browser fetch from deployed origin: ' + await live.locator('#rateStatus').textContent());
+      console.log('PASS: live weekly rate browser fetch from deployed origin: ' + await live.locator('#rateStatus').textContent());
       await live.close();
     }
   } finally { await browser.close(); }
