@@ -1,0 +1,142 @@
+const { chromium } = require('playwright');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+const origin = 'https://reed61086.github.io/rmc/';
+const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const previousDate = new Date(Date.parse(date) - 86400000).toISOString().slice(0, 10);
+const fixture = (value = 4.3, observationDate = date) => `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"><entry><d:NEW_DATE>${observationDate}T00:00:00</d:NEW_DATE><d:BC_10YEAR>${value}</d:BC_10YEAR></entry></feed>`;
+async function localAssets(page) {
+  // Exercise the deployed origin with local candidate assets, without publishing.
+  await page.route(origin + '**', route => {
+    const relative = decodeURIComponent(new URL(route.request().url()).pathname.slice('/rmc/'.length)) || 'index.html';
+    const file = path.resolve(root, relative);
+    if (!file.startsWith(root + path.sep) || !fs.existsSync(file)) return route.fulfill({ status: 404, body: '' });
+    const types = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png' };
+    return route.fulfill({ body: fs.readFileSync(file), contentType: types[path.extname(file)] });
+  });
+}
+(async () => {
+  const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'chrome', headless: true });
+  fs.mkdirSync(path.join(root, 'test-results'), { recursive: true });
+  try {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await localAssets(page);
+    await page.clock.install({ time: new Date() });
+    let requests = 0, response = fixture(4.3, previousDate);
+    await page.route('https://home.treasury.gov/**', route => { requests++; return route.fulfill({ body: response, contentType: 'application/xml', headers: { 'access-control-allow-origin': '*' } }); });
+    await page.addInitScript(() => Object.defineProperty(navigator, 'share', { value: undefined, configurable: true }));
+    await page.addInitScript(() => localStorage.setItem('rmc-calculator-state', JSON.stringify({ mode: 'standard', age: 62, homeValue: 600000, cmt: 9.99 })));
+    await page.goto(origin);
+    await page.waitForFunction(() => document.querySelector('#rateStatus').dataset.status === 'ready');
+    assert.equal(await page.locator('#cmt').inputValue(), '4.3');
+    assert.equal(await page.locator('#margin').inputValue(), '2');
+    assert.equal(await page.locator('#eirDisplay').textContent(), '6.30%');
+    await page.locator('#modeH4p').click();
+    assert.equal(await page.locator('#marginDisplay').textContent(), '2.00%');
+    assert.equal(await page.locator('#existingMortgagesField').isVisible(), false);
+    await page.locator('#modeStandard').click();
+    await page.locator('#homeValue').fill('599999');
+    assert.equal(await page.locator('#openReport').isDisabled(), false, 'whole-dollar values must not require $1,000 increments');
+    await page.locator('#homeValue').fill('700000');
+    const expected = await page.locator('#netProceedsDisplay').textContent();
+    for (const width of [320, 375, 390, 430, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.equal(await page.locator('#netProceedsDisplay').textContent(), expected);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `overflow at ${width}`);
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: path.join(root, 'test-results/mobile.png'), fullPage: true });
+    await page.locator('#openReport').click();
+    const report = await page.locator('#reportContent').textContent();
+    assert.ok(report.includes(previousDate));
+    assert.ok(report.includes('$700,000'));
+    await page.locator('#homeValue').fill('800000');
+    assert.equal(await page.locator('#reportContent').textContent(), report, 'report must remain frozen');
+    await page.locator('#refreshRate').click();
+    assert.equal(requests, 1, 'refresh is throttled');
+    response = fixture(4.4);
+    await page.clock.fastForward(16 * 60 * 1000);
+    await page.waitForFunction(() => document.querySelector('#cmt').value === '4.4');
+    assert.equal(await page.locator('#homeValue').inputValue(), '800000');
+    assert.equal(await page.locator('#reportContent').textContent(), report, 'rate refresh cannot alter report snapshot');
+    await page.locator('#shareReport').click();
+    assert.ok((await page.locator('#shareStatus').textContent()).includes('unavailable'));
+    await page.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: async () => { throw new DOMException('Cancelled', 'AbortError'); } }));
+    await page.locator('#shareReport').click();
+    await page.waitForFunction(() => document.querySelector('#shareStatus').textContent.includes('cancelled'));
+    await page.screenshot({ path: path.join(root, 'test-results/report.png'), fullPage: true });
+    await page.emulateMedia({ media: 'print' });
+    assert.equal(await page.locator('.inputs').isVisible(), false);
+    assert.equal(await page.locator('#report').isVisible(), true);
+    await page.pdf({ path: path.join(root, 'test-results/report.pdf'), format: 'Letter' });
+    await page.emulateMedia({ media: 'screen' });
+    await page.locator('#closeReport').click();
+    assert.equal(await page.locator('#openReport').evaluate(el => el === document.activeElement), true);
+    await page.keyboard.press('Tab');
+    assert.equal(await page.locator('.explanation summary').evaluate(el => el === document.activeElement), true);
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('.explanation').getAttribute('open'), '');
+    await page.locator('#homeValue').fill('');
+    assert.equal(await page.locator('#openReport').isDisabled(), true);
+    assert.equal(await page.locator('#netProceedsDisplay').textContent(), '—');
+    await page.locator('#homeValue').fill('700000');
+    await page.locator('#age').fill('61');
+    assert.equal(await page.locator('#openReport').isDisabled(), true);
+    await page.locator('#age').fill('62');
+    await page.locator('#margin').fill('2.5');
+    assert.equal(await page.locator('#eirDisplay').textContent(), '6.90%');
+    await page.locator('#modeH4p').click();
+    assert.equal(await page.locator('#marginDisplay').textContent(), '2.50%');
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.screenshot({ path: path.join(root, 'test-results/desktop.png'), fullPage: true });
+    assert.deepEqual(errors, []);
+    console.log('PASS: mobile widths, desktop parity, 2% defaults, legacy CMT migration, input validation, modes, report snapshot, share fallback, print and clean JS console');
+    await context.close();
+
+    const offlineContext = await browser.newContext();
+    const offline = await offlineContext.newPage();
+    await localAssets(offline);
+    await offline.route('https://home.treasury.gov/**', route => route.fulfill({ status: 503, body: 'Unavailable', headers: { 'access-control-allow-origin': '*' } }));
+    await offline.goto(origin);
+    await offline.waitForFunction(() => document.querySelector('#rateStatus').dataset.status === 'error');
+    assert.equal(await offline.locator('#openReport').isDisabled(), true);
+    assert.equal(await offline.locator('#cmt').inputValue(), '');
+    console.log('PASS: Treasury failure without cache blocks estimates');
+    await offlineContext.close();
+
+    const cachedContext = await browser.newContext();
+    const cached = await cachedContext.newPage();
+    await localAssets(cached);
+    await cached.clock.install({ time: new Date() });
+    await cached.addInitScript(({ date }) => localStorage.setItem('rmc-treasury-rate', JSON.stringify({ date, value: 4.1, retrievedAt: Date.now() - 60000 })), { date: previousDate });
+    let recovered = false;
+    await cached.route('https://home.treasury.gov/**', route => route.fulfill({ body: recovered ? fixture() : '<broken', contentType: 'application/xml', headers: { 'access-control-allow-origin': '*' } }));
+    await cached.goto(origin);
+    await cached.waitForFunction(() => document.querySelector('#rateStatus').dataset.status === 'error');
+    assert.equal(await cached.locator('#cmt').inputValue(), '4.1');
+    assert.ok((await cached.locator('#estimateStatus').textContent()).includes('Historical'));
+    await cached.locator('#homeValue').fill('900000');
+    recovered = true;
+    await cached.clock.fastForward(16 * 60 * 1000);
+    await cached.waitForFunction(() => document.querySelector('#rateStatus').dataset.status === 'ready');
+    assert.equal(await cached.locator('#cmt').inputValue(), '4.3');
+    assert.equal(await cached.locator('#homeValue').inputValue(), '900000');
+    console.log('PASS: malformed provider XML preserves labeled cached rate; timed recovery preserves borrower inputs');
+    await cachedContext.close();
+
+    if (process.env.LIVE_CMT === '1') {
+      const live = await browser.newPage();
+      await localAssets(live);
+      await live.goto(origin);
+      await live.waitForFunction(() => ['ready', 'stale', 'error'].includes(document.querySelector('#rateStatus').dataset.status), { timeout: 30000 });
+      assert.equal(await live.locator('#rateStatus').getAttribute('data-status'), 'ready');
+      console.log('PASS: live Treasury browser fetch from deployed origin: ' + await live.locator('#rateStatus').textContent());
+      await live.close();
+    }
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });

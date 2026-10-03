@@ -1,0 +1,85 @@
+/* Responsive additions to the existing C2 calculator styles. */
+:root { --muted: #505966; }
+:focus-visible { outline: 3px solid var(--c2-blue); outline-offset: 4px; }
+.control:focus-within { border-color: var(--c2-blue); box-shadow: 0 0 0 2px var(--pale-blue); }
+.control input { min-width: 0; }
+.control input[readonly] { color: var(--dark-blue); font-weight: 700; }
+.field > input[type="range"] { width: 100%; margin-top: 12px; accent-color: var(--c2-blue); }
+.text-button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); background: white; color: var(--dark-blue); border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .6; cursor: not-allowed; }
+.rate-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 13px; }
+.rate-actions a { color: var(--dark-blue); padding: 12px 0; }
+.hint { font-size: 13px; }
+.rate-field { background: var(--pale-blue); }
+.estimate-status { color: var(--dark-blue); font-size: 14px; min-height: 21px; }
+.report-action { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 24px 0; }
+.report-action span { font-size: 13px; color: var(--muted); }
+.explanation { padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.explanation summary { min-height: 44px; display: list-item; cursor: pointer; font-weight: 700; color: var(--dark-blue); padding: 10px 0; }
+.note { font-size: 13px; }
+.report { margin-top: 32px; padding: 24px; background: #fff; border: 1px solid var(--dark-blue); border-radius: 12px; scroll-margin-top: 16px; }
+.report-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; color: var(--muted); margin: 0; }
+.report h2 { color: var(--dark-blue); margin: 4px 0 12px; font-size: 24px; }
+.report h3 { background: var(--dark-blue); color: white; padding: 12px 16px; font-size: 17px; margin: 24px 0 0; }
+.report-values { display: grid; grid-template-columns: minmax(0, 1fr) auto; margin: 0; }
+.report-values dt, .report-values dd { margin: 0; padding: 12px; border-bottom: 1px solid var(--border); }
+.report-values dd { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.report-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.report a { color: var(--dark-blue); overflow-wrap: anywhere; }
+@media (min-width: 1000px) {
+  .container { max-width: 1160px; }
+  .inputs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .topbar { padding: 14px 16px; gap: 12px; }
+  .topbar .logo img { height: 28px; }
+  .topbar .phone { font-size: 14px; }
+  .container { padding: 24px 16px 32px; }
+  h1 { font-size: 26px; line-height: 1.2; }
+  .subtitle { font-size: 14px; }
+  .page-header { margin-bottom: 20px !important; }
+  .mode-toggle { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .mode-btn { min-height: 52px; font-size: 17px; border-top: 1px solid var(--border); }
+  .mode-btn small { display: none; }
+  .mode-btn.active { background: var(--dark-blue); color: white; border-color: var(--dark-blue); box-shadow: none; }
+  .inputs { gap: 12px; }
+  .field { padding: 16px; border-color: #c7d8e5; background: var(--pale-blue); }
+  .field label { font-size: 16px; }
+  .control { min-height: 48px; background: white; }
+  .control input[type="number"] { font-size: 20px; }
+  .age-controls { grid-template-columns: 48px minmax(0, 1fr) 48px; }
+  .age-btn { background: white; }
+  .summary { margin-top: 20px; }
+  .card-title { background: var(--dark-blue); color: white; }
+  .row { padding: 14px 12px; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; font-size: 14px; }
+  .row .value { color: var(--dark-blue); background: var(--pale-blue); padding: 5px 8px; border-radius: 6px; }
+  .row .value.negative { color: var(--danger); }
+  .row.total { background: var(--dark-blue); }
+  .row.total .label { color: white; }
+  .value.strong { font-size: 18px; }
+  .cta .btn-apply { text-align: center; }
+  .report { padding: 16px; }
+  .report-values { font-size: 14px; }
+  .report-values dt, .report-values dd { padding: 12px 8px; }
+  .report-values dt { overflow-wrap: anywhere; }
+}
+@media (max-width: 359px) {
+  .row { grid-template-columns: 1fr; gap: 6px; }
+  .row .value { justify-self: end; }
+  .report-values { grid-template-columns: 1fr; }
+  .report-values dt { border-bottom: 0; padding-bottom: 0; }
+}
+@media print {
+  body { background: white; font-size: 11pt; }
+  body:has(#report:not([hidden])) .topbar,
+  body:has(#report:not([hidden])) .page-header,
+  body:has(#report:not([hidden])) .mode-toggle,
+  body:has(#report:not([hidden])) .inputs,
+  body:has(#report:not([hidden])) .summary,
+  .connect, .site-footer, .report-buttons, #closeReport, #shareStatus { display: none !important; }
+  .container { max-width: none; padding: 0; }
+  .report { border: 0; margin: 0; padding: 0; }
+  .report h3 { background: white; color: #060a2d; border-bottom: 2px solid #060a2d; }
+  .report-values dt, .report-values dd { break-inside: avoid; }
+}
