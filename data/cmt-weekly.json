@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-13",
-  "oneYear": 4.56,
-  "tenYear": 5.03,
-  "checkedAt": "2026-11-21T03:57:56.917605+00:00",
+  "date": "2026-11-20",
+  "oneYear": 4.59,
+  "tenYear": 5.05,
+  "checkedAt": "2026-11-24T06:57:14.972031+00:00",
   "source": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=WGS1YR,WGS10YR",
   "series": [
     "WGS1YR",
